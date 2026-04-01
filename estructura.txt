@@ -1,0 +1,20 @@
+App Gen/
+├── index.html                 
+└── js/
+    ├── app.js                  (Tu archivo js.app.js)
+    ├── models/
+    │   ├── data.js             (js.models.data.js)
+    │   └── storage.js          (js.models.storage.js)
+    ├── views/
+    │   ├── home.js             (js.views.home.js)
+    │   ├── form.js             (js.views.form.js)
+    │   ├── orden-servicio.js   (js.views.orden-servicio.js)
+    │   ├── orden-verificar.js  (js.views.orden-verificar.js)
+    │   ├── admin.js            (js.views.admin.js)
+    │   └── success.js          (Renombra js.views.successs.js a success.js)
+    └── controllers/
+        ├── orden-controller.js (js controllers.orden-controller.js)
+        ├── form-controller.js  (js.controllers.form-controller.js)
+        ├── admin-controller.js (js.controllers.admin-controller.js)
+        ├── signature-controller.js (js.controllers.signature-controller.js)
+        └── modal-controller.js (js.controllers.modal-controller.js)

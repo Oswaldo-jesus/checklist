@@ -1,0 +1,308 @@
+/* components.css - Componentes reutilizables */
+
+/* Botones */
+.btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 16px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn:active {
+    transform: scale(0.98);
+}
+.btn-primary {
+    background: #1e40af;
+    color: white;
+}
+.btn-secondary {
+    background: #e2e8f0;
+    color: #475569;
+}
+.btn-success {
+    background: #22c55e;
+    color: white;
+}
+.btn-danger {
+    background: #dc2626;
+    color: white;
+}
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+/* Tarjetas */
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin: 0 0 20px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Formularios */
+.form-group {
+    margin-bottom: 16px;
+}
+label {
+    display: block;
+    font-size: 12px;
+    font-weight: bold;
+    color: #64748b;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 16px;
+    background: #f8fafc;
+}
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #1e40af;
+}
+
+/* Estilos para el formato de orden de servicio */
+.formato-container {
+    width: 100%;
+    border: 1px solid #000;
+    padding: 8px;
+    margin: auto;
+    background: white;
+    font-size: 9px;
+    font-family: Arial, sans-serif;
+    overflow-x: auto; /* Permitir scroll horizontal en móviles */
+    -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+}
+.formato-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 5px;
+}
+.formato-table td, .formato-table th {
+    border: 1px solid #444;
+    padding: 3px;
+    vertical-align: top;
+}
+.header-table td { border: none; }
+.formato-logo { 
+    width: 150px; 
+    font-weight: bold; 
+    font-size: 12px; 
+    color: #1a3a6c;
+    line-height: 1.2;
+}
+.formato-title { 
+    text-align: center; 
+    font-size: 12px; 
+    font-weight: bold; 
+    text-transform: uppercase;
+}
+.formato-folio { 
+    text-align: right; 
+    font-size: 10px; 
+}
+.formato-label { 
+    font-weight: bold; 
+    font-size: 8px; 
+    display: block; 
+    margin-bottom: 1px; 
+    text-transform: uppercase; 
+    color: #333;
+}
+.formato-input {
+    border: none;
+    border-bottom: 1px solid #666;
+    background: transparent;
+    width: 100%;
+    font-size: 9px;
+    padding: 2px 0;
+    outline: none;
+}
+.formato-line {
+    height: 14px;
+    border-bottom: 1px solid #666;
+    margin: 2px 0;
+}
+.formato-box {
+    border: 1px solid #000;
+    width: 12px;
+    height: 8px;
+    display: inline-block;
+    margin: 0 2px;
+    vertical-align: middle;
+}
+.formato-box.checked {
+    background-color: #000;
+}
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3px;
+}
+.bg-light-blue { background-color: #e6f0ff; }
+.bg-medium-blue { background-color: #cbdcf7; }
+.bg-dark-blue { background-color: #a8c4f0; }
+.signature-box {
+    height: 30px;
+    border: 1px dashed #666;
+    text-align: center;
+    position: relative;
+}
+.signature-img {
+    max-height: 25px;
+    max-width: 100%;
+    object-fit: contain;
+}
+.footer-note {
+    font-size: 7px;
+    text-align: center;
+    font-style: italic;
+    margin: 5px 0;
+}
+.legend {
+    margin-top: 10px;
+    font-size: 7px;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2px;
+}
+.color-box {
+    width: 20px;
+    height: 8px;
+    margin-right: 8px;
+    border: 1px solid #666;
+}
+.full-width {
+    width: 100%;
+}
+.text-center {
+    text-align: center;
+}
+.text-right {
+    text-align: right;
+}
+.mt-1 { margin-top: 5px; }
+.mt-2 { margin-top: 10px; }
+.mb-1 { margin-bottom: 5px; }
+.mb-2 { margin-bottom: 10px; }
+.py-1 { padding-top: 5px; padding-bottom: 5px; }
+.px-1 { padding-left: 5px; padding-right: 5px; }
+
+/* --- RESPONSIVE: Componentes en móvil --- */
+@media (max-width: 600px) {
+    .card {
+        padding: 15px;
+        margin: 10px 0;
+    }
+
+    .btn {
+        padding: 14px; /* Botones más fáciles de tocar */
+        font-size: 14px;
+    }
+
+    /* Evitar que inputs se salgan de la pantalla */
+    input, select, textarea {
+        max-width: 100%;
+    }
+
+    /* Ajustar logo en formato para que no ocupe tanto espacio y no desface la pantalla */
+    .formato-logo {
+        width: 80px;
+        font-size: 10px;
+ /* components.css - Añadir al final del archivo */
+
+/* Ajustes para nombres largos en firmas */
+.signature-box {
+    height: 50px;
+    border: 1px dashed #666;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+}
+
+.signature-img {
+    max-height: 45px;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Ajuste para texto generado en canvas de firma */
+.firma-automatica-canvas {
+    max-width: 100%;
+    max-height: 45px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Ajustes específicos para la tabla de firmas */
+.formato-table td.signature-box {
+    padding: 2px;
+    line-height: 1.1;
+    font-size: 7px;
+}
+
+/* Para el texto "ELABORÓ" que también puede ser largo */
+.formato-table td .firma-texto {
+    font-size: 7px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+/* Ajuste para el contenedor de la firma en el modal de vista previa */
+.signature-box img {
+    max-width: 100%;
+    max-height: 45px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Responsive para móviles */
+@media (max-width: 600px) {
+    .signature-box {
+        height: 40px;
+    }
+    
+    .signature-img,
+    .signature-box img,
+    .firma-automatica-canvas {
+        max-height: 35px;
+    }
+    
+    /* Ajustar tamaño de fuente para etiquetas */
+    .formato-table td {
+        font-size: 7px;
+    }
+    
+    .formato-label {
+        font-size: 6px;
+    }
+}
+ 
+ 
+ 
+    }
+}

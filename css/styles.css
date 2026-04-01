@@ -1,0 +1,208 @@
+/* styles.css - Estilos principales */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+    font-family: Arial, sans-serif; 
+    background: #f1f5f9; 
+    color: #334155;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Spinner de carga */
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-top: 4px solid #1e40af;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Header */
+.header {
+    background: white;
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.logo {
+    font-weight: bold;
+    color: #1e40af;
+    font-size: 18px;
+}
+
+/* Contenedor principal */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+}
+
+/* Canvas para firma */
+.signature-container {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+    height: 200px;
+    margin: 20px 0;
+    position: relative;
+}
+#sigCanvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+}
+
+/* Fotos */
+.photo-preview {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-top: 8px;
+    border: 1px solid #ddd;
+}
+
+/* Grid de botones en home */
+.home-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin: 30px 0;
+}
+
+@media (min-width: 768px) {
+    .home-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Stats cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 20px 0;
+}
+.stat-card {
+    text-align: center;
+    padding: 15px;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+.stat-label {
+    font-size: 11px;
+    color: #64748b;
+}
+.stat-checklist {
+    color: #1e40af;
+}
+.stat-ordenes {
+    color: #f59e0b;
+}
+
+/* Panel admin */
+.report-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 12px 0;
+    border: 1px solid #e2e8f0;
+}
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.report-date {
+    font-size: 12px;
+    color: #64748b;
+}
+.report-unit {
+    font-weight: bold;
+    color: #1e40af;
+}
+
+/* --- RESPONSIVE: Estilos para móviles --- */
+@media (max-width: 600px) {
+    .header {
+        padding: 12px;
+    }
+    
+    .container {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    /* Apilar encabezado de reportes en vertical */
+    .report-header {
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .report-header > div:last-child {
+        text-align: left; /* Alinear a la izquierda en móvil */
+        margin-top: 4px;
+        padding-top: 4px;
+        border-top: 1px dashed #e2e8f0;
+    }
+
+    /* Ajustar tamaño de estadísticas */
+    .stat-value {
+        font-size: 20px;
+    }
+    
+    /* Ajuste de header en móviles */
+    .header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+}
+
+/* Grid responsivo para formularios y filtros */
+.grid-responsive {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+@media (min-width: 768px) {
+    .grid-responsive {
+        grid-template-columns: 1fr 1fr;
+    }
+}/* Agrega esto a tu components.css o styles.css */
+
+/* Ajustes para Leaflet */
+.leaflet-container {
+    width: 100%;
+    height: 100%;
+    background: #f1f5f9;
+}
+
+.leaflet-popup-content {
+    font-size: 12px;
+    color: #1e293b;
+}
+
+/* Para móviles */
+@media (max-width: 600px) {
+    .leaflet-control-zoom {
+        display: none; /* Ocultar controles de zoom en móvil si ocupan mucho espacio */
+    }
+}

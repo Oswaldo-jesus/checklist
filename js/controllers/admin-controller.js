@@ -1,0 +1,676 @@
+// admin-controller.js - Controlador para el panel de administración
+
+const AdminController = {
+    chartInstance: null,
+    SECRET_CLEAN_CODE: "Nieto2025",
+
+    // Verificar contraseñas
+    checkPassword() {
+        const pwd = document.getElementById('adminPassword')?.value;
+        if (['nieto2025','super7','admin'].includes(pwd)) {
+            App.appState.userRole = 'supervisor';
+            App.goToStep('admin-panel');
+        } else if (['nieto2025','mecanico'].includes(pwd)) {
+            App.appState.userRole = 'taller';
+            App.goToStep('taller-panel');
+        } else alert("Clave incorrecta.");
+    },
+    
+    checkTallerPassword() {
+        const pwd = document.getElementById('tallerPassword')?.value;
+        if (['nieto2025','mecanico','taller2025'].includes(pwd)) {
+            App.appState.userRole = 'taller';
+            App.goToStep('taller-panel');
+        } else alert("❌ Clave incorrecta.");
+    },
+
+    // Cambiar pestaña
+    switchTab(tab) {
+        App.appState.activeTab = tab;
+        this.updateTabStyles(tab);
+        if (tab === 'mapas') {
+            const c = document.getElementById('reportsList');
+            if (c) { c.innerHTML = MapaQuejasView.render(); setTimeout(() => MapaQuejasView.initMapa?.(), 200); }
+        } else this.loadReportsIntoPanel();
+    },
+
+    // Filtros
+    updateFilterDate(date) { 
+        App.appState.filterDate = date; 
+        if (App.appState.activeTab !== 'mapas') this.loadReportsIntoPanel(); 
+    },
+    
+    updateFilterSearch(s) { 
+        App.appState.filterSearch = s; 
+        if (App.appState.activeTab !== 'mapas') this.loadReportsIntoPanel(); 
+    },
+    
+    updateTallerFilter(s) { 
+        App.appState.filterSearch = s; 
+        this.loadTallerPanel(); 
+    },
+
+    // Estilos de pestañas
+    updateTabStyles(active) {
+        ['tabChecklistsBtn','tabOrdenesBtn','tabSupervisionesBtn','tabMapasBtn'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) { 
+                btn.style.background = '#f8fafc'; 
+                btn.style.color = '#475569'; 
+            }
+        });
+        const activeBtn = document.getElementById(
+            active === 'checklists' ? 'tabChecklistsBtn' :
+            active === 'ordenes' ? 'tabOrdenesBtn' :
+            active === 'supervisiones' ? 'tabSupervisionesBtn' : 'tabMapasBtn'
+        );
+        if (activeBtn) {
+            activeBtn.style.background = active === 'mapas' ? '#10b981' : active === 'ordenes' ? '#f59e0b' : active === 'supervisiones' ? '#0867ec' : '#1e40af';
+            activeBtn.style.color = 'white';
+        }
+    },
+
+    // ✅ Cargar panel supervisor - CORREGIDO FILTRO DE FECHA
+    async loadReportsIntoPanel() {
+        const c = document.getElementById('reportsList');
+        const t = document.getElementById('totalReports');
+        const ct = document.getElementById('chartTitle');
+        
+        if (ct) ct.textContent = App.appState.activeTab === 'checklists' ? '📊 Estado de Inspecciones' : 
+                                  App.appState.activeTab === 'ordenes' ? '📊 Estado de Órdenes' : 
+                                  '📊 Supervisiones en Campo';
+        
+        if (c) c.innerHTML = '<div class="spinner" style="margin:40px auto"></div><p style="text-align:center">Cargando...</p>';
+        
+        try {
+            let items = App.appState.activeTab === 'checklists' ? await StorageService.loadReports() :
+                        App.appState.activeTab === 'ordenes' ? await StorageService.loadOrdenes() :
+                        JSON.parse(localStorage.getItem('supervisiones') || '[]');
+            
+            let filtered = items.filter(i => {
+                // ✅ FILTRO POR FECHA CORREGIDO - AHORA FUNCIONA CORRECTAMENTE
+                if (App.appState.filterDate) {
+                    // Crear fecha seleccionada en zona horaria LOCAL (YYYY-MM-DD a las 00:00)
+                    const [year, month, day] = App.appState.filterDate.split('-').map(Number);
+                    
+                    let itemYear, itemMonth, itemDay;
+                    
+                    if (i.timestamp) {
+                        // Si tiene timestamp, extraer fecha LOCAL
+                        const fecha = new Date(i.timestamp);
+                        itemYear = fecha.getFullYear();
+                        itemMonth = fecha.getMonth() + 1; // getMonth() devuelve 0-11
+                        itemDay = fecha.getDate();
+                    } 
+                    else if (i.fecha) {
+                        // Si tiene campo fecha en formato dd/mm/yyyy
+                        if (i.fecha.includes('/')) {
+                            const [dia, mes, año] = i.fecha.split('/').map(Number);
+                            itemYear = año;
+                            itemMonth = mes;
+                            itemDay = dia;
+                        } 
+                        // Si tiene formato yyyy-mm-dd
+                        else if (i.fecha.includes('-')) {
+                            const [año, mes, dia] = i.fecha.split('-').map(Number);
+                            itemYear = año;
+                            itemMonth = mes;
+                            itemDay = dia;
+                        }
+                    }
+                    
+                    // Si no se pudo extraer fecha, excluir del filtro
+                    if (!itemYear || !itemMonth || !itemDay) return false;
+                    
+                    // Comparar año, mes y día
+                    return itemYear === year && 
+                           itemMonth === month && 
+                           itemDay === day;
+                }
+                return true;
+            }).filter(i => {
+                // Filtro de búsqueda por texto (sin cambios)
+                if (!App.appState.filterSearch) return true;
+                const s = App.appState.filterSearch.toLowerCase();
+                if (App.appState.activeTab === 'supervisiones') {
+                    return (i.nombreSupervisor?.toLowerCase().includes(s) || 
+                            i.nombreCliente?.toLowerCase().includes(s) || 
+                            i.numeroPedido?.toLowerCase().includes(s) || 
+                            i.telefonoCliente?.toLowerCase().includes(s) || 
+                            i.motivoQueja?.toLowerCase().includes(s) || 
+                            i.ubicacion?.toLowerCase().includes(s));
+                } else {
+                    return (i.operador?.toLowerCase().includes(s) || 
+                            i.unidad?.toLowerCase().includes(s) || 
+                            i.ecoUnidad?.toLowerCase().includes(s) || 
+                            i.ruta?.toLowerCase().includes(s) || 
+                            i.descripcion?.toLowerCase().includes(s) || 
+                            i.descripcionFalla?.toLowerCase().includes(s) || 
+                            i.folio?.toString().includes(s));
+                }
+            });
+            
+            if (t) t.textContent = filtered.length;
+            if (c) c.innerHTML = AdminView.renderReportsList(filtered, App.appState.activeTab);
+            
+            try { this.updateStatsChart(filtered, App.appState.activeTab); } catch (e) {}
+        } catch (error) {
+            console.error("Error cargando reportes:", error);
+            if (c) c.innerHTML = `<div class="card"><p>Error: ${error.message}</p><button onclick="AdminController.loadReportsIntoPanel()" class="btn btn-primary">Reintentar</button></div>`;
+        }
+    },
+
+    // ===== PANEL TALLER =====
+    async loadTallerPanel() {
+        const c = document.getElementById('reportsList');
+        if (c) c.innerHTML = '<div class="spinner" style="margin:40px auto"></div><p style="text-align:center">Cargando órdenes...</p>';
+        
+        try {
+            let items = await StorageService.loadOrdenes();
+            
+            if (App.appState.filterSearch) {
+                const s = App.appState.filterSearch.toLowerCase();
+                items = items.filter(i => i.unidad?.toLowerCase().includes(s) || 
+                                         i.folio?.toString().toLowerCase().includes(s) || 
+                                         i.operador?.toLowerCase().includes(s));
+            }
+            
+            items.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+            this.updateTallerStats(items);
+            
+            if (c) c.innerHTML = this.renderTallerOrdersList(items);
+        } catch (error) {
+            console.error("Error cargando taller:", error);
+            if (c) c.innerHTML = '<div class="card"><p>Error al cargar las órdenes</p><button onclick="AdminController.loadTallerPanel()" class="btn btn-primary">Reintentar</button></div>';
+        }
+    },
+
+    // Renderizar órdenes en taller
+    renderTallerOrdersList(ordenes) {
+        if (!ordenes.length) return `<div class="card" style="text-align:center;padding:40px;"><div style="font-size:40px;">🔧</div><p>No hay órdenes</p></div>`;
+        
+        return ordenes.map(o => {
+            const color = o.estado === 'pendiente' ? '#dc2626' : o.estado === 'en_proceso' ? '#2563eb' : '#16a34a';
+            const bg = o.estado === 'pendiente' ? '#fee2e2' : o.estado === 'en_proceso' ? '#dbeafe' : '#dcfce7';
+            
+            return `<div class="report-card" style="border-left:4px solid ${color};margin-bottom:15px;">
+                <div class="report-header">
+                    <div>
+                        <div class="report-date">${o.fecha || ''} ${o.hora || ''}</div>
+                        <div style="font-weight:bold;">Folio: ${o.folio || 'N/A'}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="report-unit">${o.unidad || ''}</div>
+                        <div style="font-size:12px;color:#64748b;">${o.operador || ''}</div>
+                    </div>
+                </div>
+                
+                <div style="margin:10px 0;padding:10px;background:#f8fafc;border-radius:6px;">
+                    <div style="margin-bottom:8px;"><strong>🔧 Falla reportada:</strong> ${o.descripcionFalla || 'Sin descripción'}</div>
+                    
+                    ${o.estado === 'en_proceso' ? `
+                        <div style="margin-top:10px;">
+                            <label style="font-weight:bold;display:block;margin-bottom:5px;">⚙️ Trabajo realizado:</label>
+                            <textarea id="trabajo-${o.id}" rows="3" style="width:100%;padding:8px;border:2px solid #e2e8f0;border-radius:6px;margin-bottom:8px;" placeholder="Describe el trabajo realizado...">${o.trabajoRealizado || ''}</textarea>
+                            <button onclick="AdminController.guardarTrabajoRealizado('${o.id}')" 
+                                    class="btn btn-success" style="width:100%;padding:8px;font-size:13px;margin:0;">
+                                💾 Guardar trabajo realizado
+                            </button>
+                        </div>
+                    ` : o.trabajoRealizado ? `
+                        <div style="margin-top:10px;padding:8px;background:#ecfdf5;border-radius:4px;">
+                            <strong>✅ Trabajo realizado:</strong> ${o.trabajoRealizado}
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+                    <span style="background:${bg};color:${color};padding:4px 8px;border-radius:12px;font-size:12px;">
+                        ${o.estado === 'pendiente' ? '⏳ PENDIENTE' : o.estado === 'en_proceso' ? '🔄 EN PROCESO' : '✅ COMPLETADO'}
+                    </span>
+                    
+                    <div style="display:flex;gap:5px;">
+                        ${o.estado === 'pendiente' ? `
+                            <button onclick="AdminController.updateTallerOrderStatus('${o.id}','en_proceso')" 
+                                    class="btn btn-primary" style="padding:6px 12px;font-size:12px;width:auto;margin:0;">
+                                ▶ Iniciar
+                            </button>
+                        ` : ''}
+                        
+                        ${o.estado === 'en_proceso' ? `
+                            <button onclick="AdminController.updateTallerOrderStatus('${o.id}','completado')" 
+                                    class="btn btn-success" style="padding:6px 12px;font-size:12px;width:auto;margin:0;">
+                                ✓ Completar
+                            </button>
+                        ` : ''}
+                        
+                        <button onclick="AdminController.viewOrden('${o.id}')" 
+                                class="btn btn-secondary" style="padding:6px 12px;font-size:12px;width:auto;margin:0;">
+                            Ver
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    },
+
+    // Guardar trabajo realizado
+    async guardarTrabajoRealizado(ordenId) {
+        const textarea = document.getElementById(`trabajo-${ordenId}`);
+        if (!textarea) {
+            alert("Error: No se encontró el campo de texto");
+            return false;
+        }
+        
+        const trabajo = textarea.value;
+        
+        if (!trabajo?.trim()) {
+            alert("❌ El trabajo realizado no puede estar vacío");
+            return false;
+        }
+        
+        const btn = document.activeElement;
+        const originalText = btn.innerText;
+        btn.innerText = 'Guardando...'; 
+        btn.disabled = true;
+        
+        try {
+            const ordenes = await StorageService.loadOrdenes();
+            const ordenIndex = ordenes.findIndex(o => o.id == ordenId);
+            
+            if (ordenIndex === -1) {
+                alert("Orden no encontrada");
+                return false;
+            }
+            
+            ordenes[ordenIndex].trabajoRealizado = trabajo;
+            localStorage.setItem('ordenes', JSON.stringify(ordenes));
+            
+            if (typeof StorageService.updateOrden === 'function') {
+                await StorageService.updateOrden(ordenId, { trabajoRealizado: trabajo });
+            }
+            
+            await this.loadTallerPanel();
+            alert("✅ Trabajo guardado correctamente");
+            return true;
+            
+        } catch (error) {
+            console.error("Error guardando trabajo:", error);
+            alert("Error al guardar el trabajo realizado");
+            return false;
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    },
+
+    // Estadísticas del taller
+    updateTallerStats(ordenes) {
+        const pendientes = document.getElementById('pendientesCount');
+        const proceso = document.getElementById('procesoCount');
+        const completadas = document.getElementById('completadasCount');
+        
+        if (pendientes) pendientes.textContent = ordenes.filter(o => o.estado === 'pendiente').length;
+        if (proceso) proceso.textContent = ordenes.filter(o => o.estado === 'en_proceso').length;
+        if (completadas) completadas.textContent = ordenes.filter(o => o.estado === 'completado' || o.estado === 'terminado').length;
+    },
+
+    // Actualizar estado de orden
+    async updateTallerOrderStatus(id, status) {
+        if (!confirm(status === 'en_proceso' ? '¿Iniciar esta orden?' : '¿Completar esta orden?')) return;
+        
+        if (status === 'completado') {
+            const ordenes = await StorageService.loadOrdenes();
+            const orden = ordenes.find(o => o.id == id);
+            
+            if (!orden.trabajoRealizado || orden.trabajoRealizado.trim() === '') {
+                alert("❌ Debes guardar el trabajo realizado antes de completar la orden");
+                return;
+            }
+        }
+        
+        const btn = document.activeElement;
+        const originalText = btn.innerText;
+        btn.innerText = '...'; 
+        btn.disabled = true;
+        
+        try {
+            const ordenes = await StorageService.loadOrdenes();
+            const ordenIndex = ordenes.findIndex(o => o.id == id);
+            
+            if (ordenIndex === -1) {
+                alert("Orden no encontrada");
+                return;
+            }
+            
+            ordenes[ordenIndex].estado = status;
+            localStorage.setItem('ordenes', JSON.stringify(ordenes));
+            
+            if (typeof StorageService.updateOrdenStatus === 'function') {
+                await StorageService.updateOrdenStatus(id, status);
+            }
+            
+            await this.loadTallerPanel();
+            
+        } catch (error) {
+            console.error('Error actualizando orden:', error);
+            alert('Error al actualizar la orden. Intenta de nuevo.');
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    },
+
+    // Ver detalles
+    async viewReport(id) { 
+        const r = (await StorageService.loadReports()).find(r=>r.id==id);
+        if (r) ModalService.show(AdminView.renderReportDetails(r)); 
+        else alert("No encontrado");
+    },
+    
+    async viewOrden(id) { 
+        const o = (await StorageService.loadOrdenes()).find(o=>o.id==id);
+        if (o) ModalService.show(AdminView.renderOrdenDetails(o)); 
+        else alert("No encontrado");
+    },
+    
+    // Ver supervisiones
+    async viewSupervision(id) { 
+        const supervisiones = JSON.parse(localStorage.getItem('supervisiones')||'[]');
+        const s = supervisiones.find(s => s.id == id);
+        if (s) {
+            ModalService.show(this.renderSupervisionDetails(s)); 
+        } else {
+            alert("No encontrado");
+        }
+    },
+
+    // Renderizar detalles de supervisión
+    renderSupervisionDetails(s) { 
+        return `
+            <div style="padding: 25px; max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+                <!-- Encabezado con nombre del supervisor -->
+                <div style="background: #0867ec; color: white; padding: 20px; border-radius: 12px 12px 0 0; margin-bottom: 20px;">
+                    <h2 style="margin: 0; font-size: 24px; font-weight: bold;">${s.nombreSupervisor || 'ALBERTO SORIA'}</h2>
+                </div>
+                
+                <!-- Contenido principal -->
+                <div style="padding: 0 10px;">
+                    <!-- Fecha y hora -->
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; color: #475569;">
+                        <strong>📅 Fecha:</strong> ${s.fecha || ''} ${s.hora || ''}
+                    </div>
+                    
+                    <!-- Pedido y cliente -->
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px; margin-bottom: 15px;">
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
+                            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">📦 PEDIDO</div>
+                            <div style="font-weight: bold; font-size: 16px;">${s.numeroPedido || '16394332'}</div>
+                        </div>
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
+                            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">👤 CLIENTE</div>
+                            <div style="font-weight: bold; font-size: 14px;">${s.nombreCliente || 'GAS EXPRES NIETO'}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Teléfono -->
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <span style="background: #e2e8f0; padding: 8px; border-radius: 50%;">📞</span>
+                        <div>
+                            <div style="font-size: 11px; color: #64748b;">TELÉFONO</div>
+                            <div style="font-weight: bold;">${s.telefonoCliente || '4421639433'}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Motivo de la queja (en rojo) -->
+                    <div style="background: #fee2e2; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #dc2626;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <span style="color: #dc2626; font-size: 18px;">🔴</span>
+                            <span style="font-weight: bold; color: #991b1b;">MOTIVO DE LA QUEJA</span>
+                        </div>
+                        <p style="margin: 5px 0 0 0; color: #7f1d1d; font-size: 14px;">
+                            ${s.motivoQueja || 'EL CLIENTE SE QUEJA PORQUE NO LE DURA EL GAS'}
+                        </p>
+                    </div>
+                    
+                    <!-- Solución brindada (en verde) -->
+                    <div style="background: #dcfce7; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #16a34a;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <span style="color: #16a34a; font-size: 18px;">✅</span>
+                            <span style="font-weight: bold; color: #166534;">SOLUCIÓN BRINDADA</span>
+                        </div>
+                        <p style="margin: 5px 0 0 0; color: #14532d; font-size: 14px;">
+                            ${s.solucion || 'SE REVISA NOTAS DE CONSUMO Y SE REALIZA REPOSICIÓN DE GAS 20 KG.'}
+                        </p>
+                    </div>
+                    
+                    <!-- Dirección (en azul) -->
+                    <div style="background: #dbeafe; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #2563eb;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <span style="color: #2563eb; font-size: 18px;">❌</span>
+                            <span style="font-weight: bold; color: #1e40af;">DIRECCIÓN</span>
+                        </div>
+                        <p style="margin: 5px 0 0 0; color: #1e3a8a; font-size: 14px;">
+                            ${s.ubicacion || (s.calle ? `${s.calle} ${s.numero || ''}, ${s.colonia || ''}` : 'Dirección no disponible')}
+                        </p>
+                    </div>
+                    
+                    <!-- Enlace a Google Maps -->
+                    ${s.enlaceMaps ? `
+                        <div style="text-align: center; margin: 20px 0;">
+                            <a href="${s.enlaceMaps}" 
+                               target="_blank"
+                               style="display: inline-flex; align-items: center; gap: 8px; background: #1e40af; color: white; padding: 12px 24px; border-radius: 30px; text-decoration: none; font-weight: bold;">
+                                📷 Ver en Google Maps
+                            </a>
+                        </div>
+                    ` : s.coordenadas ? `
+                        <div style="text-align: center; margin: 20px 0;">
+                            <a href="https://www.google.com/maps?q=${s.coordenadas.lat},${s.coordenadas.lng}" 
+                               target="_blank"
+                               style="display: inline-flex; align-items: center; gap: 8px; background: #1e40af; color: white; padding: 12px 24px; border-radius: 30px; text-decoration: none; font-weight: bold;">
+                                📷 Ver en Google Maps
+                            </a>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Fotos de evidencia (si existen) -->
+                    ${s.evidenciasFotos?.length > 0 ? `
+                        <div style="margin-top: 20px;">
+                            <h4 style="color: #1e293b; margin-bottom: 10px;">📸 Evidencia fotográfica</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+                                ${s.evidenciasFotos.map(foto => `
+                                    <img src="${foto.data}" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : s.evidenciaFoto ? `
+                        <div style="margin-top: 20px;">
+                            <h4 style="color: #1e293b; margin-bottom: 10px;">📸 Evidencia fotográfica</h4>
+                            <img src="${s.evidenciaFoto}" style="max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Firma del supervisor -->
+                    ${s.firmaSupervisor ? `
+                        <div style="margin-top: 25px; padding: 15px; background: #f8fafc; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 11px; color: #64748b; margin-bottom: 5px;">FIRMA DEL SUPERVISOR</div>
+                            <img src="${s.firmaSupervisor}" style="max-height: 60px; max-width: 100%; object-fit: contain;">
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Comentario adicional -->
+                    ${s.comentario ? `
+                        <div style="margin-top: 15px; padding: 12px; background: #fff3cd; border-radius: 8px; font-size: 13px;">
+                            <strong>📝 Comentario:</strong> ${s.comentario}
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <!-- Botones de acción -->
+                <div style="display: flex; gap: 10px; margin-top: 30px; padding: 0 10px 20px 10px;">
+                    <button onclick="ModalService.close()"
+                            style="flex: 1; padding: 12px; background: #e2e8f0; color: #475569; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        `; 
+    },
+
+    // Exportar CSV
+    async exportToCSV() {
+        let data = App.appState.step === 'taller-panel' ? await StorageService.loadOrdenes() :
+                   App.appState.activeTab === 'checklists' ? await StorageService.loadReports() :
+                   App.appState.activeTab === 'ordenes' ? await StorageService.loadOrdenes() :
+                   JSON.parse(localStorage.getItem('supervisiones')||'[]');
+        
+        if (!data.length) return alert('Sin datos');
+        
+        let filtered = data;
+        if (App.appState.filterSearch) {
+            const s = App.appState.filterSearch.toLowerCase();
+            filtered = filtered.filter(i => i.operador?.toLowerCase().includes(s) || 
+                                           i.unidad?.toLowerCase().includes(s) || 
+                                           i.folio?.toString().includes(s) || 
+                                           i.nombreSupervisor?.toLowerCase().includes(s));
+        }
+        
+        const csv = App.appState.activeTab === 'supervisiones' ? this.exportToCSVFormat(filtered, 'supervisiones') : 
+                    StorageService.exportToCSV(filtered, App.appState.activeTab === 'checklists' ? 'checklists' : 'ordenes');
+        
+        const url = URL.createObjectURL(new Blob(['\uFEFF'+csv], {type:'text/csv'}));
+        const a = document.createElement('a'); 
+        a.href = url; 
+        a.download = `export_${Date.now()}.csv`; 
+        a.click(); 
+        URL.revokeObjectURL(url);
+        alert(`Exportados ${filtered.length} registros`);
+    },
+    
+    exportToCSVFormat(d,t) { 
+        if (t === 'supervisiones') {
+            return 'Fecha,Hora,Supervisor,Pedido,Cliente,Teléfono,Motivo,Solución,Ubicación\n' + 
+                   d.map(i => `${i.fecha},${i.hora},${i.nombreSupervisor},${i.numeroPedido},${i.nombreCliente},${i.telefonoCliente},${i.motivoQueja},${i.solucion},${i.ubicacion}`).join('\n');
+        }
+        return '';
+    },
+
+    // Limpiar todo
+    async clearAllReports() {
+        const code = prompt("Código de seguridad:");
+        if (code !== this.SECRET_CLEAN_CODE) return alert("❌ Código incorrecto");
+        if (!confirm("¿Eliminar todos los registros?")) return;
+        
+        if (App.appState.activeTab === 'checklists') await StorageService.clearReports();
+        else if (App.appState.activeTab === 'ordenes') await StorageService.clearOrdenes();
+        else localStorage.removeItem('supervisiones');
+        
+        this.loadReportsIntoPanel();
+    },
+
+    // Gráfica
+    updateStatsChart(d, t) {
+        if (!Chart) return;
+        const ctx = document.getElementById('statsChart');
+        if (!ctx) return;
+        if (this.chartInstance) this.chartInstance.destroy();
+        
+        let labels, values, backgroundColor;
+        
+        if (t === 'checklists') {
+            labels = ['✅ Aprobados', '❌ Con Fallas'];
+            values = [
+                d.filter(r => !Object.values(r.evaluaciones || {}).includes('rechazado')).length,
+                d.filter(r => Object.values(r.evaluaciones || {}).includes('rechazado')).length
+            ];
+            backgroundColor = ['#22c55e', '#dc2626'];
+        } else if (t === 'ordenes') {
+            labels = ['⏳ Pendientes', '🔄 En Proceso', '✅ Completados'];
+            values = [
+                d.filter(o => o.estado === 'pendiente').length,
+                d.filter(o => o.estado === 'en_proceso').length,
+                d.filter(o => o.estado === 'completado' || o.estado === 'terminado').length
+            ];
+            backgroundColor = ['#f59e0b', '#3b82f6', '#22c55e'];
+        } else {
+            // supervisiones
+            const supervisores = d.reduce((acc, curr) => {
+                const nombre = curr.nombreSupervisor || 'Sin supervisor';
+                acc[nombre] = (acc[nombre] || 0) + 1;
+                return acc;
+            }, {});
+            
+            labels = Object.keys(supervisores);
+            values = Object.values(supervisores);
+            backgroundColor = ['#0867ec', '#4f9ef7', '#7bb3f9', '#a8c4f0', '#cbdcf7'];
+        }
+        
+        this.chartInstance = new Chart(ctx, {
+            type: t === 'supervisiones' ? 'bar' : 'doughnut',
+            data: { 
+                labels, 
+                datasets: [{ 
+                    data: values, 
+                    backgroundColor: backgroundColor 
+                }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { 
+                        position: 'bottom' 
+                    } 
+                } 
+            }
+        });
+    },
+
+    // FUNCIÓN PARA DESCARGAR PDF
+    downloadPDF(elementId, fileName) {
+        if (typeof html2pdf === 'undefined') {
+            alert("Error: La librería html2pdf no está cargada");
+            return Promise.reject();
+        }
+        
+        const element = document.getElementById(elementId);
+        if (!element) {
+            alert("Error: No se encontró el elemento a imprimir");
+            return;
+        }
+        
+        const loadingDiv = document.createElement('div');
+        loadingDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:10000;text-align:center;';
+        loadingDiv.innerHTML = '<div class="spinner" style="margin:10px auto;"></div><p>Generando PDF, por favor espera...</p>';
+        document.body.appendChild(loadingDiv);
+        
+        const opt = {
+            margin: [0.5, 0.5, 0.5, 0.5],
+            filename: `${fileName}_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: { scale: 2, letterRendering: true, useCORS: true, logging: false },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        
+        return html2pdf().set(opt).from(element).save()
+            .then(() => {
+                document.body.removeChild(loadingDiv);
+            })
+            .catch((error) => {
+                document.body.removeChild(loadingDiv);
+                console.error('Error generando PDF:', error);
+                alert('Error al generar el PDF. Intenta de nuevo.');
+            });
+    },
+
+    async generatePdfBlob(eId) { 
+        return typeof html2pdf !== 'undefined' ? html2pdf().from(document.getElementById(eId)).output('blob') : null; 
+    },
+    
+    async sendOrdenEmail(oId) { 
+        console.log('Enviar email', oId); 
+    }
+};
+
+if (typeof window !== 'undefined') window.AdminController = AdminController;
