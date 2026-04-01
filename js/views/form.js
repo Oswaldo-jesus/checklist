@@ -143,12 +143,12 @@ const FormView = {
                                     // Dibujar la pregunta normal si no es encabezado
                                     return `
                                     <div style="margin-bottom: 12px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <div>
-                                                <span style="font-weight: bold;">${point.label}</span>
-                                                ${point.critical ? '<span style="font-size: 10px; color: #dc2626; margin-left: 8px;">(CRÍTICO)</span>' : ''}
+                                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                                            <div style="flex: 1; min-width: 0;">
+                                                <span style="font-weight: bold; line-height: 1.3; display: block; word-wrap: break-word;">${point.label}</span>
+                                                ${point.critical ? '<span style="font-size: 10px; color: #dc2626; font-weight: bold; display: inline-block; margin-top: 4px;">(CRÍTICO)</span>' : ''}
                                             </div>
-                                            <div style="display: flex; gap: 8px;">
+                                            <div style="display: flex; gap: 8px; flex-shrink: 0;">
                                                 <button type="button"
                                                         onclick="FormController.setEvaluation('${point.id}', 'aprobado', App.appState)"
                                                         style="padding: 6px 12px; border: none; border-radius: 6px; 
