@@ -157,12 +157,13 @@ const OrdenServicioView = {
                                 <label>Puntos Críticos Revisados (Selecciona los verificados)</label>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
                                     ${CONFIG.PUNTOS_CRITICOS.map((punto, index) => `
-                                        <label style="display: flex; align-items: center; gap: 5px; font-size: 12px;">
+                                    <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; padding: 10px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; height: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                                             <input type="checkbox" 
                                                    value="${punto}"
                                                    ${appState.ordenData.puntosCriticos.includes(punto) ? 'checked' : ''}
-                                                   onchange="OrdenController.togglePuntoCritico('${punto}', this.checked, App.appState)">
-                                            ${punto}
+                                               onchange="OrdenController.togglePuntoCritico('${punto}', this.checked, App.appState)"
+                                               style="width: 18px; height: 18px; padding: 0; margin: 0; margin-top: 1px; flex-shrink: 0; cursor: pointer;">
+                                        <span style="line-height: 1.4; flex: 1; color: #334155;">${punto}</span>
                                         </label>
                                     `).join('')}
                                 </div>
