@@ -584,14 +584,23 @@ const INSPECTION_POINTS_AUTOTANQUE = [
     { id: "at_lat_loderas", label: "Guardafangos / Loderas (Completos y sin daños)", critical: true },
     { id: "at_lat_escalera", label: "Escalera (Bien sujeta)", critical: true },
 
-    // PARTE POSTERIOR, INFERIOR, EMERGENCIA Y LETREROS
-    { id: "head_final_at", label: "SECCIÓN FINAL", isHeader: true },
-    { id: "at_post_luces", label: "POSTERIOR: Sistema de luces (Funcionando)", critical: true },
-    { id: "at_post_defensa", label: "POSTERIOR: Defensa (Que exista, sujeción correcta y sin daños)", critical: true },
-    { id: "at_inf_cinta", label: "INFERIOR: Cinta estática (Que toque el piso)", critical: true },
-    { id: "at_em_botiquin", label: "EMERGENCIA: Botiquín y Extintor 9kg ABC (A bordo, vigente)", critical: true },
-    { id: "at_em_senales", label: "EMERGENCIA: Señales, Letreros y Calzas (A bordo)", critical: true },
-    { id: "at_letreros", label: "LETREROS: Letreros, señales y avisos (Claros, legibles y no obstruidos)", critical: true }
+    // PARTE POSTERIOR DE LA UNIDAD
+    { id: "head_post_at", label: "PARTE POSTERIOR DE LA UNIDAD", isHeader: true },
+    { id: "at_post_luces", label: "Sistema de luces (Funcionando)", critical: true },
+    { id: "at_post_defensa", label: "Defensa (Que exista, sujeción correcta y sin daños)", critical: true },
+
+    // PARTE INFERIOR
+    { id: "head_inf_at", label: "PARTE INFERIOR DE LA UNIDAD", isHeader: true },
+    { id: "at_inf_cinta", label: "Cinta estática (Que toque el piso)", critical: true },
+
+    // EQUIPO DE EMERGENCIA
+    { id: "head_em_at", label: "EQUIPO DE EMERGENCIA", isHeader: true },
+    { id: "at_em_botiquin", label: "Botiquín y Extintor 9kg ABC (A bordo, vigente)", critical: true },
+    { id: "at_em_senales", label: "Señales, Letreros y Calzas (A bordo)", critical: true },
+
+    // LETREROS, SEÑALES Y AVISOS
+    { id: "head_letreros_at", label: "LETREROS, SEÑALES Y AVISOS", isHeader: true },
+    { id: "at_letreros", label: "Letreros, señales y avisos (Claros, legibles y no obstruidos)", critical: true }
 ];
 
 

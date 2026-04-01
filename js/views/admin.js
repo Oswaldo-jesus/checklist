@@ -248,7 +248,7 @@ const AdminView = {
             if (point.isHeader) {
                 return `
                     <tr>
-                        <td colspan="5" style="border: 1px solid #000; padding: 4px; font-size: 9px; font-weight: bold; background-color: #e5e7eb; text-transform: uppercase;">
+                        <td colspan="4" style="border: 1px solid #000; padding: 4px; font-size: 9px; font-weight: bold; background-color: #e5e7eb; text-transform: uppercase;">
                             ${point.label}
                         </td>
                     </tr>
@@ -281,9 +281,6 @@ const AdminView = {
                     <td style="border: 1px solid #000; padding: 4px; font-size: 9px; text-align: center; font-weight: bold; color: ${isRejected ? '#dc2626' : '#000'};">
                         ${isRejected ? 'X' : ''}
                     </td>
-                    <td style="border: 1px solid #000; padding: 4px; font-size: 9px; text-align: center;">
-                        ${hasPhoto ? `<img src="${report.fotos[point.id]}" style="max-height: 35px; max-width: 70px; object-fit: contain;">` : ''}
-                    </td>
                 </tr>
             `;
         };
@@ -292,6 +289,33 @@ const AdminView = {
         const operadorText = report.operador || '____________________';
         const unidadText = report.ecoUnidad || '__________';
         const observaciones = report.observaciones || 'Ninguna';
+
+        // Extraer fotos y crear una galería visible solo en la pantalla (NO EN EL PDF)
+        const pointsWithPhotos = inspectionPoints.filter(p => !p.isHeader && report.fotos && report.fotos[p.id]);
+        let photosHtml = '';
+        if (pointsWithPhotos.length > 0) {
+            photosHtml = `
+                <div style="margin-top: 24px; background: #f8fafc; padding: 20px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                    <h3 style="font-size: 14px; font-weight: bold; color: #1e40af; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                        📸 Evidencia Fotográfica de Fallas
+                        <span style="font-size: 10px; font-weight: normal; color: #64748b; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">(Visible solo en panel, no se imprime en PDF)</span>
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+                        ${pointsWithPhotos.map(p => {
+                            let comp = p.label;
+                            const m = p.label.match(/^(.*?)\s*\((.*?)\)$/);
+                            if (m) comp = m[1] + ' - ' + m[2];
+                            return `
+                                <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; background: white; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                    <p style="font-size: 11px; font-weight: bold; margin-bottom: 8px; color: #334155;">${comp}</p>
+                                    <img src="${report.fotos[p.id]}" style="max-width: 100%; height: 160px; object-fit: contain; border-radius: 4px;">
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
 
         return `
             <div style="padding: 20px; max-width: 900px; margin: 0 auto; padding-bottom: 100px;">
@@ -314,7 +338,7 @@ const AdminView = {
 
                     <!-- Unidad info -->
                     <div style="margin-bottom: 16px; font-size: 14px; font-weight: bold; border: 1px solid #000; padding: 8px; background-color: #f9fafb; text-transform: uppercase;">
-                        ${tipoRuta === 'Autotanque' ? 'Autotanque' : 'Vehículo de Reparto'} - ${tipoRuta}
+                        ${tipoRuta === 'Autotanque' ? 'AUTOTANQUE' : 'VEHÍCULO DE REPARTO'}
                     </div>
                     
                     <!-- Datos Generales -->
@@ -339,11 +363,10 @@ const AdminView = {
                     <table style="border-collapse: collapse; width: 100%; margin-bottom: 24px;">
                         <thead>
                             <tr style="background-color: #f3f4f6;">
-                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 32%; text-align: left;">Componentes</th>
-                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 32%; text-align: left;">Criterio de aceptación</th>
-                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 8%; text-align: center;">Cumple</th>
-                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 8%; text-align: center;">No cumple</th>
-                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 20%; text-align: center;">Evidencia / Obs.</th>
+                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 40%; text-align: left;">Componentes</th>
+                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 40%; text-align: left;">Criterio de aceptación</th>
+                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 10%; text-align: center;">Cumple</th>
+                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 10%; text-align: center;">No cumple</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -378,6 +401,9 @@ const AdminView = {
                     </div>
 
                 </div>
+                
+                <!-- Galería de fotos que solo se ve en pantalla -->
+                ${photosHtml}
                 
                 <!-- BOTONES DE ACCIÓN -->
                 <div style="display: flex; gap: 10px; margin-top: 20px;">

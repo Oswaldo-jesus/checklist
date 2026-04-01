@@ -649,7 +649,7 @@ const AdminController = {
             margin: [0.5, 0.5, 0.5, 0.5],
             filename: `${fileName}_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
             image: { type: 'jpeg', quality: 0.95 },
-            html2canvas: { scale: 2, letterRendering: true, useCORS: true, logging: false },
+            html2canvas: { scale: 2, letterRendering: true, useCORS: true, logging: false, scrollY: 0, scrollX: 0 },
             jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
         

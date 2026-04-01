@@ -17,9 +17,9 @@ const ModalService = {
         modal.style.background = 'rgba(0,0,0,0.5)';
         modal.style.zIndex = '10000';
         modal.style.display = 'flex';
-        modal.style.alignItems = 'center';
+        modal.style.alignItems = 'flex-start';
         modal.style.justifyContent = 'center';
-        modal.style.padding = '20px';
+        modal.style.padding = '40px 20px';
         modal.style.overflowY = 'auto';
         
         modal.innerHTML = `
