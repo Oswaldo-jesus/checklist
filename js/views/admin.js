@@ -248,7 +248,7 @@ const AdminView = {
             if (point.isHeader) {
                 return `
                     <tr>
-                        <td colspan="4" style="border: 1px solid #000; padding: 6px; font-size: 11px; font-weight: bold; background-color: #e5e7eb; text-transform: uppercase;">
+                        <td colspan="5" style="border: 1px solid #000; padding: 4px; font-size: 9px; font-weight: bold; background-color: #e5e7eb; text-transform: uppercase;">
                             ${point.label}
                         </td>
                     </tr>
@@ -273,14 +273,16 @@ const AdminView = {
             
             return `
                 <tr>
-                    <td style="border: 1px solid #000; padding: 6px; font-size: 11px;">${component}</td>
-                    <td style="border: 1px solid #000; padding: 6px; font-size: 11px;">${criterion}</td>
-                    <td style="border: 1px solid #000; padding: 6px; font-size: 11px; text-align: center; font-weight: bold;">
+                    <td style="border: 1px solid #000; padding: 4px; font-size: 9px;">${component}</td>
+                    <td style="border: 1px solid #000; padding: 4px; font-size: 9px;">${criterion}</td>
+                    <td style="border: 1px solid #000; padding: 4px; font-size: 9px; text-align: center; font-weight: bold;">
                         ${isApproved ? 'X' : ''}
                     </td>
-                    <td style="border: 1px solid #000; padding: 6px; font-size: 11px; text-align: center; font-weight: bold; color: ${isRejected ? '#dc2626' : '#000'};">
+                    <td style="border: 1px solid #000; padding: 4px; font-size: 9px; text-align: center; font-weight: bold; color: ${isRejected ? '#dc2626' : '#000'};">
                         ${isRejected ? 'X' : ''}
-                        ${hasPhoto ? `<br><img src="${report.fotos[point.id]}" style="max-height: 30px; max-width: 50px; object-fit: cover; margin-top: 4px; border: 1px solid #ccc;">` : ''}
+                    </td>
+                    <td style="border: 1px solid #000; padding: 4px; font-size: 9px; text-align: center;">
+                        ${hasPhoto ? `<img src="${report.fotos[point.id]}" style="max-height: 35px; max-width: 70px; object-fit: contain;">` : ''}
                     </td>
                 </tr>
             `;
@@ -337,10 +339,11 @@ const AdminView = {
                     <table style="border-collapse: collapse; width: 100%; margin-bottom: 24px;">
                         <thead>
                             <tr style="background-color: #f3f4f6;">
-                                <th style="border: 1px solid #000; padding: 6px; font-size: 11px; width: 35%; text-align: left;">Componentes</th>
-                                <th style="border: 1px solid #000; padding: 6px; font-size: 11px; width: 35%; text-align: left;">Criterio de aceptación</th>
-                                <th style="border: 1px solid #000; padding: 6px; font-size: 11px; width: 15%; text-align: center;">Cumple</th>
-                                <th style="border: 1px solid #000; padding: 6px; font-size: 11px; width: 15%; text-align: center;">No cumple</th>
+                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 32%; text-align: left;">Componentes</th>
+                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 32%; text-align: left;">Criterio de aceptación</th>
+                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 8%; text-align: center;">Cumple</th>
+                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 8%; text-align: center;">No cumple</th>
+                                <th style="border: 1px solid #000; padding: 4px; font-size: 9px; width: 20%; text-align: center;">Evidencia / Obs.</th>
                             </tr>
                         </thead>
                         <tbody>
