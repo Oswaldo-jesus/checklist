@@ -82,9 +82,13 @@ const AdminView = {
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px;">
+                    <button onclick="AdminController.exportAllToPDF()"
+                            style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px;">
+                        📄 Exportar PDFs
+                    </button>
                         <button onclick="AdminController.exportToCSV()"
                                 style="background: #22c55e; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px;">
-                            Exportar
+                        Exportar CSV
                         </button>
                     </div>
                 </div>
@@ -93,6 +97,13 @@ const AdminView = {
                     <!-- Filtros -->
                     <div class="card">
                         <div class="grid-responsive">
+                            <div class="form-group">
+                                <label>Filtrar por mes</label>
+                                <input type="month" 
+                                       id="filterMonth"
+                                       value="${appState.filterMonth || ''}"
+                                       onchange="AdminController.updateFilterMonth(this.value)">
+                            </div>
                             <div class="form-group">
                                 <label>Filtrar por fecha</label>
                                 <input type="date" 
@@ -179,6 +190,10 @@ const AdminView = {
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px;">
+                        <button onclick="AdminController.exportAllToPDF()"
+                                style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px;">
+                            📄 Exportar PDF
+                        </button>
                         <button onclick="AdminController.exportToCSV()"
                                 style="background: #22c55e; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px;">
                             Exportar

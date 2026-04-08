@@ -40,6 +40,11 @@ const AdminController = {
         if (App.appState.activeTab !== 'mapas') this.loadReportsIntoPanel(); 
     },
     
+    updateFilterMonth(m) { 
+        App.appState.filterMonth = m; 
+        if (App.appState.activeTab !== 'mapas') this.loadReportsIntoPanel(); 
+    },
+    
     updateFilterSearch(s) { 
         App.appState.filterSearch = s; 
         if (App.appState.activeTab !== 'mapas') this.loadReportsIntoPanel(); 
@@ -88,44 +93,35 @@ const AdminController = {
                         JSON.parse(localStorage.getItem('supervisiones') || '[]');
             
             let filtered = items.filter(i => {
-                // ✅ FILTRO POR FECHA CORREGIDO - AHORA FUNCIONA CORRECTAMENTE
-                if (App.appState.filterDate) {
-                    // Crear fecha seleccionada en zona horaria LOCAL (YYYY-MM-DD a las 00:00)
-                    const [year, month, day] = App.appState.filterDate.split('-').map(Number);
-                    
-                    let itemYear, itemMonth, itemDay;
-                    
-                    if (i.timestamp) {
-                        // Si tiene timestamp, extraer fecha LOCAL
-                        const fecha = new Date(i.timestamp);
-                        itemYear = fecha.getFullYear();
-                        itemMonth = fecha.getMonth() + 1; // getMonth() devuelve 0-11
-                        itemDay = fecha.getDate();
-                    } 
-                    else if (i.fecha) {
-                        // Si tiene campo fecha en formato dd/mm/yyyy
-                        if (i.fecha.includes('/')) {
-                            const [dia, mes, año] = i.fecha.split('/').map(Number);
-                            itemYear = año;
-                            itemMonth = mes;
-                            itemDay = dia;
-                        } 
-                        // Si tiene formato yyyy-mm-dd
-                        else if (i.fecha.includes('-')) {
-                            const [año, mes, dia] = i.fecha.split('-').map(Number);
-                            itemYear = año;
-                            itemMonth = mes;
-                            itemDay = dia;
-                        }
+                let itemYear, itemMonth, itemDay;
+                
+                if (i.timestamp) {
+                    const fecha = new Date(i.timestamp);
+                    itemYear = fecha.getFullYear();
+                    itemMonth = fecha.getMonth() + 1;
+                    itemDay = fecha.getDate();
+                } else if (i.fecha) {
+                    if (i.fecha.includes('/')) {
+                        const [dia, mes, año] = i.fecha.split('/').map(Number);
+                        itemYear = año; itemMonth = mes; itemDay = dia;
+                    } else if (i.fecha.includes('-')) {
+                        const [año, mes, dia] = i.fecha.split('-').map(Number);
+                        itemYear = año; itemMonth = mes; itemDay = dia;
                     }
-                    
-                    // Si no se pudo extraer fecha, excluir del filtro
+                }
+                
+                // Filtro por Mes
+                if (App.appState.filterMonth) {
+                    if (!itemYear || !itemMonth) return false;
+                    const [year, month] = App.appState.filterMonth.split('-').map(Number);
+                    if (itemYear !== year || itemMonth !== month) return false;
+                }
+                
+                // Filtro por Día Exacto
+                if (App.appState.filterDate) {
                     if (!itemYear || !itemMonth || !itemDay) return false;
-                    
-                    // Comparar año, mes y día
-                    return itemYear === year && 
-                           itemMonth === month && 
-                           itemDay === day;
+                    const [year, month, day] = App.appState.filterDate.split('-').map(Number);
+                    if (itemYear !== year || itemMonth !== month || itemDay !== day) return false;
                 }
                 return true;
             }).filter(i => {
@@ -554,6 +550,148 @@ const AdminController = {
                    d.map(i => `${i.fecha},${i.hora},${i.nombreSupervisor},${i.numeroPedido},${i.nombreCliente},${i.telefonoCliente},${i.motivoQueja},${i.solucion},${i.ubicacion}`).join('\n');
         }
         return '';
+    },
+
+    // Exportar todos los reportes filtrados a PDFs individuales (uno por uno)
+    async exportAllToPDF() {
+        const isTaller = App.appState.step === 'taller-panel';
+        const activeTab = isTaller ? 'ordenes' : App.appState.activeTab;
+
+        if (activeTab === 'mapas') return alert('Esta función no aplica para el mapa.');
+
+        // 1. Obtener los datos según la pestaña
+        let items = activeTab === 'checklists' ? await StorageService.loadReports() :
+                    activeTab === 'ordenes' ? await StorageService.loadOrdenes() :
+                    JSON.parse(localStorage.getItem('supervisiones') || '[]');
+        
+        // 2. Aplicar los mismos filtros que se ven en pantalla
+        let filtered = items;
+        if (isTaller) {
+            if (App.appState.filterSearch) {
+                const s = App.appState.filterSearch.toLowerCase();
+                filtered = items.filter(i => i.unidad?.toLowerCase().includes(s) || 
+                                         i.folio?.toString().toLowerCase().includes(s) || 
+                                         i.operador?.toLowerCase().includes(s));
+            }
+        } else {
+            filtered = items.filter(i => {
+                let itemYear, itemMonth, itemDay;
+                if (i.timestamp) {
+                    const fecha = new Date(i.timestamp);
+                    itemYear = fecha.getFullYear(); itemMonth = fecha.getMonth() + 1; itemDay = fecha.getDate();
+                } else if (i.fecha) {
+                    if (i.fecha.includes('/')) {
+                        const [dia, mes, año] = i.fecha.split('/').map(Number);
+                        itemYear = año; itemMonth = mes; itemDay = dia;
+                    } else if (i.fecha.includes('-')) {
+                        const [año, mes, dia] = i.fecha.split('-').map(Number);
+                        itemYear = año; itemMonth = mes; itemDay = dia;
+                    }
+                }
+
+                if (App.appState.filterMonth) {
+                    if (!itemYear || !itemMonth) return false;
+                    const [year, month] = App.appState.filterMonth.split('-').map(Number);
+                    if (itemYear !== year || itemMonth !== month) return false;
+                }
+
+                if (App.appState.filterDate) {
+                    if (!itemYear || !itemMonth || !itemDay) return false;
+                    const [year, month, day] = App.appState.filterDate.split('-').map(Number);
+                    if (itemYear !== year || itemMonth !== month || itemDay !== day) return false;
+                }
+                return true;
+            }).filter(i => {
+                if (!App.appState.filterSearch) return true;
+                const s = App.appState.filterSearch.toLowerCase();
+                if (activeTab === 'supervisiones') {
+                    return (i.nombreSupervisor?.toLowerCase().includes(s) || i.nombreCliente?.toLowerCase().includes(s) || i.numeroPedido?.toLowerCase().includes(s) || i.telefonoCliente?.toLowerCase().includes(s) || i.motivoQueja?.toLowerCase().includes(s) || i.ubicacion?.toLowerCase().includes(s));
+                } else {
+                    return (i.operador?.toLowerCase().includes(s) || i.unidad?.toLowerCase().includes(s) || i.ecoUnidad?.toLowerCase().includes(s) || i.ruta?.toLowerCase().includes(s) || i.descripcion?.toLowerCase().includes(s) || i.descripcionFalla?.toLowerCase().includes(s) || i.folio?.toString().includes(s));
+                }
+            });
+        }
+
+        if (!filtered.length) return alert('No hay registros para exportar con los filtros actuales.');
+        if (!confirm(`Se van a descargar ${filtered.length} archivos PDF individuales.\n\nIMPORTANTE: Tu navegador podría pedirte permiso para "Descargar múltiples archivos". Por favor dale en "Permitir".\n\n¿Deseas continuar?`)) return;
+
+        // 3. Mostrar pantalla de carga interactiva
+        const loadingDiv = document.createElement('div');
+        loadingDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);color:white;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:99999;font-family:sans-serif;';
+        loadingDiv.innerHTML = `
+            <div class="spinner" style="margin-bottom:20px; width:50px; height:50px; border:5px solid #f3f3f3; border-top:5px solid #3b82f6; border-radius:50%; animation:spin 1s linear infinite;"></div>
+            <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+            <h2 style="margin:0 0 10px 0;">Generando PDFs individuales...</h2>
+            <p id="pdfProgress" style="font-size:18px; font-weight:bold; color:#32cd32;">Preparando 0 de ${filtered.length}</p>
+            <p style="font-size:14px; margin-top:20px; color:#cbd5e1; text-align:center; max-width:80%;">Por favor, no cierres esta ventana mientras se descargan.<br>Asegúrate de permitir las descargas múltiples si el navegador te lo pregunta.</p>
+        `;
+        document.body.appendChild(loadingDiv);
+        const progressText = document.getElementById('pdfProgress');
+
+        // 4. Crear contenedor temporal
+        const container = document.createElement('div');
+        // IMPORTANTE: Lo colocamos fuera de pantalla pero con top:0 para evitar bugs de html2canvas
+        container.style.cssText = 'position:absolute; left:-9999px; top:0; width: 800px; background: white;';
+        document.body.appendChild(container);
+
+        // 5. Procesar uno por uno secuencialmente
+        try {
+            for (let i = 0; i < filtered.length; i++) {
+                const item = filtered[i];
+                progressText.innerText = `Descargando ${i + 1} de ${filtered.length}...`;
+
+                    // Generar el HTML completo de la vista
+                let htmlContent = activeTab === 'checklists' ? AdminView.renderReportDetails(item) :
+                                  activeTab === 'ordenes' ? AdminView.renderOrdenDetails(item) :
+                                  this.renderSupervisionDetails(item);
+                    
+                    // Inyectar en el contenedor para que el DOM lo renderice
+                    container.innerHTML = htmlContent;
+
+                    // ¡AQUÍ ESTÁ LA CLAVE! 
+                    // Extraemos exactamente el mismo recuadro que usa downloadPDF()
+                    let elementToPrint;
+                    if (activeTab === 'checklists') {
+                        elementToPrint = document.getElementById(`report-content-${item.id}`);
+                    } else if (activeTab === 'ordenes') {
+                        elementToPrint = document.getElementById(`orden-content-${item.id}`);
+                    } else {
+                        elementToPrint = container.firstElementChild; // Supervisiones no tiene ID interno
+                    }
+
+                    // Asegurarnos de ocultar botones si llegara a existir alguno dentro
+                    const style = document.createElement('style');
+                    style.innerHTML = '.btn, button { display: none !important; }';
+                    if (elementToPrint) elementToPrint.appendChild(style);
+                
+                let prefix = activeTab === 'checklists' ? 'Inspeccion_' + (item.ecoUnidad || '') :
+                             activeTab === 'ordenes' ? 'Orden_' + (item.folio || '') :
+                             'Supervision_' + ((item.nombreSupervisor || '').split(' ')[0]);
+                
+                // Se agregó ID único al nombre del archivo para que el navegador no los empalme o cancele
+                let filename = `${prefix}_${(item.fecha || '').replace(/\//g, '-')}_${item.id || i}`;
+
+                    // Opciones idénticas a la función downloadPDF original
+                const opt = {
+                    margin: [0.5, 0.5, 0.5, 0.5],
+                    filename: `${filename}.pdf`,
+                    image: { type: 'jpeg', quality: 0.95 },
+                        html2canvas: { scale: 2, letterRendering: true, useCORS: true, logging: false, scrollY: 0, scrollX: 0 },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+
+                    await html2pdf().set(opt).from(elementToPrint || container).save();
+                // Damos un poco más de tiempo (1.2 seg) entre descargas para no trabar el navegador
+                await new Promise(resolve => setTimeout(resolve, 1200));
+            }
+            alert(`✅ Se han descargado ${filtered.length} PDFs correctamente.`);
+        } catch (error) {
+            console.error('Error generando PDFs:', error);
+            alert('Ocurrió un error al generar los PDFs. Verifica la consola para más detalles.');
+        } finally {
+            document.body.removeChild(loadingDiv);
+            document.body.removeChild(container);
+        }
     },
 
     // Limpiar todo
