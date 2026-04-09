@@ -2,27 +2,6 @@
 
 const AdminController = {
     chartInstance: null,
-    SECRET_CLEAN_CODE: "Nieto2025",
-
-    // Verificar contraseñas
-    checkPassword() {
-        const pwd = document.getElementById('adminPassword')?.value;
-        if (['nieto2025','super7','admin'].includes(pwd)) {
-            App.appState.userRole = 'supervisor';
-            App.goToStep('admin-panel');
-        } else if (['nieto2025','mecanico'].includes(pwd)) {
-            App.appState.userRole = 'taller';
-            App.goToStep('taller-panel');
-        } else alert("Clave incorrecta.");
-    },
-    
-    checkTallerPassword() {
-        const pwd = document.getElementById('tallerPassword')?.value;
-        if (['nieto2025','mecanico','taller2025'].includes(pwd)) {
-            App.appState.userRole = 'taller';
-            App.goToStep('taller-panel');
-        } else alert("❌ Clave incorrecta.");
-    },
 
     // Cambiar pestaña
     switchTab(tab) {
@@ -514,6 +493,85 @@ const AdminController = {
         `; 
     },
 
+    // Función auxiliar para aplicar los filtros (incluyendo el de mes por defecto)
+    getFilteredDataForExport(items, isTaller, activeTab) {
+        let filtered = items;
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth() + 1;
+
+        if (isTaller) {
+            if (App.appState.filterSearch) {
+                const s = App.appState.filterSearch.toLowerCase();
+                filtered = filtered.filter(i => i.unidad?.toLowerCase().includes(s) || 
+                                         i.folio?.toString().toLowerCase().includes(s) || 
+                                         i.operador?.toLowerCase().includes(s));
+            }
+            
+            // En taller no hay filtros de fecha en la UI, aplicamos mes actual por defecto
+            filtered = filtered.filter(i => {
+                let itemYear, itemMonth;
+                if (i.timestamp) {
+                    const fecha = new Date(i.timestamp);
+                    itemYear = fecha.getFullYear(); itemMonth = fecha.getMonth() + 1;
+                } else if (i.fecha) {
+                    if (i.fecha.includes('/')) {
+                        const [dia, mes, año] = i.fecha.split('/').map(Number);
+                        itemYear = año; itemMonth = mes;
+                    } else if (i.fecha.includes('-')) {
+                        const [año, mes, dia] = i.fecha.split('-').map(Number);
+                        itemYear = año; itemMonth = mes;
+                    }
+                }
+                return itemYear === currentYear && itemMonth === currentMonth;
+            });
+        } else {
+            filtered = filtered.filter(i => {
+                let itemYear, itemMonth, itemDay;
+                if (i.timestamp) {
+                    const fecha = new Date(i.timestamp);
+                    itemYear = fecha.getFullYear(); itemMonth = fecha.getMonth() + 1; itemDay = fecha.getDate();
+                } else if (i.fecha) {
+                    if (i.fecha.includes('/')) {
+                        const [dia, mes, año] = i.fecha.split('/').map(Number);
+                        itemYear = año; itemMonth = mes; itemDay = dia;
+                    } else if (i.fecha.includes('-')) {
+                        const [año, mes, dia] = i.fecha.split('-').map(Number);
+                        itemYear = año; itemMonth = mes; itemDay = dia;
+                    }
+                }
+
+                if (App.appState.filterMonth) {
+                    if (!itemYear || !itemMonth) return false;
+                    const [year, month] = App.appState.filterMonth.split('-').map(Number);
+                    if (itemYear !== year || itemMonth !== month) return false;
+                }
+
+                if (App.appState.filterDate) {
+                    if (!itemYear || !itemMonth || !itemDay) return false;
+                    const [year, month, day] = App.appState.filterDate.split('-').map(Number);
+                    if (itemYear !== year || itemMonth !== month || itemDay !== day) return false;
+                }
+
+                // Si no hay ningún filtro de fecha aplicado por el usuario, limitar solo al mes actual
+                if (!App.appState.filterMonth && !App.appState.filterDate) {
+                    if (itemYear !== currentYear || itemMonth !== currentMonth) return false;
+                }
+
+                return true;
+            }).filter(i => {
+                if (!App.appState.filterSearch) return true;
+                const s = App.appState.filterSearch.toLowerCase();
+                if (activeTab === 'supervisiones') {
+                    return (i.nombreSupervisor?.toLowerCase().includes(s) || i.nombreCliente?.toLowerCase().includes(s) || i.numeroPedido?.toLowerCase().includes(s) || i.telefonoCliente?.toLowerCase().includes(s) || i.motivoQueja?.toLowerCase().includes(s) || i.ubicacion?.toLowerCase().includes(s));
+                } else {
+                    return (i.operador?.toLowerCase().includes(s) || i.unidad?.toLowerCase().includes(s) || i.ecoUnidad?.toLowerCase().includes(s) || i.ruta?.toLowerCase().includes(s) || i.descripcion?.toLowerCase().includes(s) || i.descripcionFalla?.toLowerCase().includes(s) || i.folio?.toString().includes(s));
+                }
+            });
+        }
+        return filtered;
+    },
+
     // Exportar CSV
     async exportToCSV() {
         let data = App.appState.step === 'taller-panel' ? await StorageService.loadOrdenes() :
@@ -523,14 +581,12 @@ const AdminController = {
         
         if (!data.length) return alert('Sin datos');
         
-        let filtered = data;
-        if (App.appState.filterSearch) {
-            const s = App.appState.filterSearch.toLowerCase();
-            filtered = filtered.filter(i => i.operador?.toLowerCase().includes(s) || 
-                                           i.unidad?.toLowerCase().includes(s) || 
-                                           i.folio?.toString().includes(s) || 
-                                           i.nombreSupervisor?.toLowerCase().includes(s));
-        }
+        const isTaller = App.appState.step === 'taller-panel';
+        const activeTab = isTaller ? 'ordenes' : App.appState.activeTab;
+        
+        let filtered = this.getFilteredDataForExport(data, isTaller, activeTab);
+        
+        if (!filtered.length) return alert('No hay registros en el mes actual o con los filtros aplicados.');
         
         const csv = App.appState.activeTab === 'supervisiones' ? this.exportToCSVFormat(filtered, 'supervisiones') : 
                     StorageService.exportToCSV(filtered, App.appState.activeTab === 'checklists' ? 'checklists' : 'ordenes');
@@ -564,53 +620,8 @@ const AdminController = {
                     activeTab === 'ordenes' ? await StorageService.loadOrdenes() :
                     JSON.parse(localStorage.getItem('supervisiones') || '[]');
         
-        // 2. Aplicar los mismos filtros que se ven en pantalla
-        let filtered = items;
-        if (isTaller) {
-            if (App.appState.filterSearch) {
-                const s = App.appState.filterSearch.toLowerCase();
-                filtered = items.filter(i => i.unidad?.toLowerCase().includes(s) || 
-                                         i.folio?.toString().toLowerCase().includes(s) || 
-                                         i.operador?.toLowerCase().includes(s));
-            }
-        } else {
-            filtered = items.filter(i => {
-                let itemYear, itemMonth, itemDay;
-                if (i.timestamp) {
-                    const fecha = new Date(i.timestamp);
-                    itemYear = fecha.getFullYear(); itemMonth = fecha.getMonth() + 1; itemDay = fecha.getDate();
-                } else if (i.fecha) {
-                    if (i.fecha.includes('/')) {
-                        const [dia, mes, año] = i.fecha.split('/').map(Number);
-                        itemYear = año; itemMonth = mes; itemDay = dia;
-                    } else if (i.fecha.includes('-')) {
-                        const [año, mes, dia] = i.fecha.split('-').map(Number);
-                        itemYear = año; itemMonth = mes; itemDay = dia;
-                    }
-                }
-
-                if (App.appState.filterMonth) {
-                    if (!itemYear || !itemMonth) return false;
-                    const [year, month] = App.appState.filterMonth.split('-').map(Number);
-                    if (itemYear !== year || itemMonth !== month) return false;
-                }
-
-                if (App.appState.filterDate) {
-                    if (!itemYear || !itemMonth || !itemDay) return false;
-                    const [year, month, day] = App.appState.filterDate.split('-').map(Number);
-                    if (itemYear !== year || itemMonth !== month || itemDay !== day) return false;
-                }
-                return true;
-            }).filter(i => {
-                if (!App.appState.filterSearch) return true;
-                const s = App.appState.filterSearch.toLowerCase();
-                if (activeTab === 'supervisiones') {
-                    return (i.nombreSupervisor?.toLowerCase().includes(s) || i.nombreCliente?.toLowerCase().includes(s) || i.numeroPedido?.toLowerCase().includes(s) || i.telefonoCliente?.toLowerCase().includes(s) || i.motivoQueja?.toLowerCase().includes(s) || i.ubicacion?.toLowerCase().includes(s));
-                } else {
-                    return (i.operador?.toLowerCase().includes(s) || i.unidad?.toLowerCase().includes(s) || i.ecoUnidad?.toLowerCase().includes(s) || i.ruta?.toLowerCase().includes(s) || i.descripcion?.toLowerCase().includes(s) || i.descripcionFalla?.toLowerCase().includes(s) || i.folio?.toString().includes(s));
-                }
-            });
-        }
+        // 2. Aplicar los mismos filtros que se ven en pantalla + filtro del mes actual por defecto
+        let filtered = this.getFilteredDataForExport(items, isTaller, activeTab);
 
         if (!filtered.length) return alert('No hay registros para exportar con los filtros actuales.');
         if (!confirm(`Se van a descargar ${filtered.length} archivos PDF individuales.\n\nIMPORTANTE: Tu navegador podría pedirte permiso para "Descargar múltiples archivos". Por favor dale en "Permitir".\n\n¿Deseas continuar?`)) return;
@@ -696,9 +707,10 @@ const AdminController = {
 
     // Limpiar todo
     async clearAllReports() {
-        const code = prompt("Código de seguridad:");
-        if (code !== this.SECRET_CLEAN_CODE) return alert("❌ Código incorrecto");
-        if (!confirm("¿Eliminar todos los registros?")) return;
+        if (App.appState.userRole !== 'admin') {
+            return alert("❌ Acceso denegado: Se requieren permisos de Administrador para esta acción.");
+        }
+        if (!confirm("¿Estás seguro de eliminar todos los registros de forma permanente?")) return;
         
         if (App.appState.activeTab === 'checklists') await StorageService.clearReports();
         else if (App.appState.activeTab === 'ordenes') await StorageService.clearOrdenes();

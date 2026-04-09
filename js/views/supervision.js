@@ -1,37 +1,6 @@
 // supervision.js - Vistas para el módulo de Supervisión en Campo
 
 const SupervisionView = {
-    // Vista de login
-    renderLogin() {
-        return `
-            <div class="container">
-                <div style="text-align: center; padding: 40px 20px;">
-                    <h2 style="color: #1e293b; margin-bottom: 30px;">👨‍🔧 Acceso Supervisor en Campo</h2>
-                    
-                    <div class="card" style="max-width: 300px; margin: 0 auto;">
-                        <div class="form-group">
-                            <label>Clave de acceso</label>
-                            <input type="password" 
-                                   id="supervisionPassword"
-                                   placeholder="Ingresa la clave"
-                                   style="text-align: center; font-weight: bold;">
-                        </div>
-                        
-                        <button onclick="SupervisionController.checkPassword()" class="btn" style="background: #0867ec; color: white;">
-                            Ingresar
-                        </button>
-                        
-                        <button onclick="App.goToStep('home')" 
-                                class="btn btn-secondary"
-                                style="margin-top: 10px;">
-                            Volver
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-
     // Vista del formulario de supervisión
     renderForm(appState) {
         const data = appState.supervisionData;

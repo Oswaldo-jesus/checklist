@@ -55,11 +55,22 @@ const App = {
         },
         firmaChofer: null,
         firmaTaller: null,
-        userRole: null
+        userRole: null,
+        user: null
     },
     
     // Navegar a un paso específico (MODIFICADO - Agregada limpieza de firmas)
     goToStep(step) {
+        // --- CANDADO DE SEGURIDAD POR ROLES ---
+        const role = this.appState.userRole;
+        
+        // Bloquear Paneles a cualquier rol que no sea admin
+        if (step === 'admin-panel' || step === 'taller-panel') {
+            if (role !== 'admin') {
+                return alert("❌ Acceso denegado: Área exclusiva de Administradores.");
+            }
+        }
+
         // Si estamos saliendo de orden-verificar, limpiar las firmas
         if (this.appState.step === 'orden-verificar' && step !== 'orden-verificar') {
             const tallerCanvas = document.getElementById('firmaTallerCanvas');
@@ -97,6 +108,7 @@ const App = {
                 break;
             case 'supervision-form':
                 SignatureController.initSupervisionCanvas();
+                if (typeof SupervisionController !== 'undefined') SupervisionController.obtenerUbicacionActual();
                 break;
             case 'admin-panel':
                 AdminController.loadReportsIntoPanel();
@@ -130,6 +142,9 @@ const App = {
                     HomeView.updateStats();
                 }, 100);
                 break;
+            case 'login':
+                app.innerHTML = AuthView.renderLogin();
+                break;
             case 'form':
                 app.innerHTML = FormView.render(this.appState);
                 break;
@@ -138,12 +153,6 @@ const App = {
                 break;
             case 'orden-verificar':
                 app.innerHTML = OrdenVerificarView.render(this.appState);
-                break;
-            case 'admin-login':
-                app.innerHTML = AdminView.renderLogin();
-                break;
-            case 'taller-login':
-                app.innerHTML = AdminView.renderTallerLogin();
                 break;
             case 'admin-panel':
                 app.innerHTML = AdminView.renderPanel(this.appState);
@@ -162,9 +171,6 @@ const App = {
                 setTimeout(() => {
                     if (GeocercasView.initMap) GeocercasView.initMap();
                 }, 100);
-                break;
-            case 'supervision':
-                app.innerHTML = SupervisionView.renderLogin();
                 break;
             case 'supervision-form':
                 app.innerHTML = SupervisionView.renderForm(this.appState);
@@ -185,9 +191,31 @@ const App = {
     }, // <-- ESTA COMA ES IMPORTANTE
     
     // Inicializar la aplicación
-    init() {
+    async init() {
+        // 1. Revisar inactividad por si cerraron el navegador (Límite: 15 minutos = 900000 ms)
+        const lastActivity = localStorage.getItem('lastActivity');
+        const now = Date.now();
+        const INACTIVITY_LIMIT = 15 * 60 * 1000;
+        
+        if (lastActivity && (now - parseInt(lastActivity)) > INACTIVITY_LIMIT) {
+            if (typeof StorageService !== 'undefined') {
+                const client = StorageService.init();
+                if (client) await client.auth.signOut(); // Cerrar sesión silenciosamente en Supabase
+            }
+        }
+        localStorage.setItem('lastActivity', now.toString());
+
+        // Revisar si ya hay una sesión de Supabase iniciada (para no pedir login a cada rato)
+        if (typeof AuthController !== 'undefined') {
+            await AuthController.checkActiveSession();
+        }
+        
         setTimeout(() => {
-            this.goToStep('home');
+            if (this.appState.user) {
+                this.goToStep('home');
+            } else {
+                this.goToStep('login');
+            }
         }, 500);
     },
 
@@ -201,6 +229,24 @@ const App = {
         if(elOrden) elOrden.textContent = ordenes.length;
     }
 }; // <-- CIERRE DEL OBJETO App
+
+// --- SISTEMA DE CIERRE DE SESIÓN POR INACTIVIDAD (15 MINUTOS) ---
+let inactivityTimer;
+function resetInactivityTimer() {
+    localStorage.setItem('lastActivity', Date.now().toString());
+    clearTimeout(inactivityTimer);
+    if (App && App.appState && App.appState.user) {
+        inactivityTimer = setTimeout(() => {
+            alert("⏳ Tu sesión ha expirado por inactividad (15 minutos). Por seguridad, vuelve a iniciar sesión.");
+            if (typeof AuthController !== 'undefined') AuthController.logout();
+        }, 15 * 60 * 1000);
+    }
+}
+
+// Detectar clics, toques y movimiento para reiniciar el reloj
+['mousemove', 'keypress', 'touchstart', 'click', 'scroll'].forEach(evt => 
+    window.addEventListener(evt, resetInactivityTimer)
+);
 
 // Inicializar aplicación cuando el DOM esté listo
 if (document.readyState === 'loading') {

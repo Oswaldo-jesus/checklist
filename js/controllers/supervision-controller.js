@@ -1,27 +1,11 @@
 // supervision-controller.js - Controlador para el módulo de Supervisión en Campo
 
 const SupervisionController = {
-    // Clave de acceso para supervisión
-    SUPERVISION_KEY: "nieto2025",
-    
     // Variable para almacenar las coordenadas actuales
     currentLocation: {
         lat: null,
         lng: null,
         address: ''
-    },
-
-    // Verificar contraseña
-    checkPassword() {
-        const password = document.getElementById('supervisionPassword').value;
-        
-        if (password === this.SUPERVISION_KEY) {
-            // Obtener ubicación automáticamente al entrar
-            this.obtenerUbicacionActual();
-            App.goToStep('supervision-form');
-        } else {
-            alert("❌ Clave incorrecta. La clave es: " + this.SUPERVISION_KEY);
-        }
     },
 
     // Obtener ubicación actual del dispositivo
