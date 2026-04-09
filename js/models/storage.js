@@ -322,6 +322,24 @@ async updateOrden(id, updates) {
         }
         
         return csv;
+    },
+
+    // Cambiar contraseña de un usuario mediante función segura (RPC)
+    async resetUserPassword(email, newPassword) {
+        const client = this.init();
+        if (!client) throw new Error("Supabase no conectado");
+
+        const { error } = await client.rpc('admin_reset_password', {
+            target_email: email,
+            new_password: newPassword
+        });
+
+        if (error) {
+            console.error("Error reseteando contraseña:", error);
+            throw new Error(error.message || "No se pudo actualizar. Verifica tus permisos.");
+        }
+        
+        return true;
     }
 };
 

@@ -20,6 +20,10 @@ const AdminView = {
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px;">
+                        <button onclick="AdminController.showPasswordModal()"
+                                style="background: #8b5cf6; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                            🔐 Accesos
+                        </button>
                     <button onclick="AdminController.exportAllToPDF()"
                             style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px;">
                         📄 Exportar PDFs

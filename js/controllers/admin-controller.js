@@ -820,6 +820,56 @@ const AdminController = {
     
     async sendOrdenEmail(oId) { 
         console.log('Enviar email', oId); 
+    },
+
+    // ===== GESTIÓN DE CONTRASEÑAS =====
+    showPasswordModal() {
+        const html = `
+            <div style="padding: 20px; text-align: left; font-family: Arial, sans-serif;">
+                <h3 style="margin-bottom: 10px; color: #1e293b; font-size: 18px;">🔐 Cambiar Contraseña</h3>
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">
+                    Ingresa el correo del empleado al que deseas restablecerle el acceso y su nueva contraseña temporal.
+                </p>
+                <form onsubmit="AdminController.handlePasswordReset(event)">
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #334155;">Correo del empleado</label>
+                        <input type="email" id="resetEmail" required placeholder="Ej: super_jesus@gen.com" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #334155;">Nueva Contraseña</label>
+                        <input type="password" id="resetPassword" required minlength="6" placeholder="Mínimo 6 caracteres" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" onclick="ModalService.close()" class="btn btn-secondary" style="flex: 1; margin: 0;">Cancelar</button>
+                        <button type="submit" id="btnResetPwd" class="btn btn-primary" style="flex: 1; margin: 0;">Actualizar Acceso</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        ModalService.show(html);
+    },
+
+    async handlePasswordReset(e) {
+        e.preventDefault();
+        const email = document.getElementById('resetEmail').value.trim();
+        const password = document.getElementById('resetPassword').value;
+        const btn = document.getElementById('btnResetPwd');
+
+        if(!confirm(`¿Estás seguro de cambiar la contraseña de "${email}"?`)) return;
+
+        btn.disabled = true;
+        btn.innerText = "Actualizando...";
+
+        try {
+            await StorageService.resetUserPassword(email, password);
+            alert(`✅ Contraseña actualizada correctamente para ${email}`);
+            ModalService.close();
+        } catch (error) {
+            alert(`❌ Error: ${error.message}`);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Actualizar Acceso";
+        }
     }
 };
 
