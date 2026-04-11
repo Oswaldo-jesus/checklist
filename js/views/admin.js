@@ -1,6 +1,68 @@
 // admin.js - Vistas del panel de administración
 
 const AdminView = {
+    // Vista de login para SUPERVISOR
+    renderLogin() {
+        return `
+            <div class="container">
+                <div style="text-align: center; padding: 40px 20px;">
+                    <h2 style="color: #1e293b; margin-bottom: 30px;">👨‍💼 Acceso Supervisor</h2>
+                    
+                    <div class="card" style="max-width: 300px; margin: 0 auto;">
+                        <div class="form-group">
+                            <label>Clave de acceso</label>
+                            <input type="password" 
+                                   id="adminPassword"
+                                   placeholder="Ingresa la clave"
+                                   style="text-align: center; font-weight: bold;">
+                        </div>
+                        
+                        <button onclick="AdminController.checkPassword()" class="btn btn-primary">
+                            Ingresar
+                        </button>
+                        
+                        <button onclick="App.goToStep('home')" 
+                                class="btn btn-secondary"
+                                style="margin-top: 10px;">
+                            Volver
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    
+    // Vista de login para TALLER
+    renderTallerLogin() {
+        return `
+            <div class="container">
+                <div style="text-align: center; padding: 40px 20px;">
+                    <h2 style="color: #1e293b; margin-bottom: 30px;">🔧 Acceso Taller Mecánico</h2>
+                    
+                    <div class="card" style="max-width: 300px; margin: 0 auto;">
+                        <div class="form-group">
+                            <label>Clave de acceso</label>
+                            <input type="password" 
+                                   id="tallerPassword"
+                                   placeholder="Ingresa la clave"
+                                   style="text-align: center; font-weight: bold;">
+                        </div>
+                        
+                        <button onclick="AdminController.checkTallerPassword()" class="btn btn-primary" style="background: #0f172a;">
+                            Ingresar al Taller
+                        </button>
+                        
+                        <button onclick="App.goToStep('home')" 
+                                class="btn btn-secondary"
+                                style="margin-top: 10px;">
+                            Volver
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    
     // Vista del panel SUPERVISOR
     renderPanel(appState) {
         return `
@@ -14,16 +76,12 @@ const AdminView = {
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <img src="${CONFIG.LOGO_URL}" style="height: 35px; background: white; padding: 2px; border-radius: 4px;">
                             <div>
-                                <div class="logo" style="color: white;">Panel Administrador</div>
+                                <div class="logo" style="color: white;">Panel Supervisor</div>
                                 <div style="font-size: 10px; opacity: 0.8;">Gestión de reportes y órdenes</div>
                             </div>
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px;">
-                        <button onclick="AdminController.showPasswordModal()"
-                                style="background: #8b5cf6; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; cursor: pointer;">
-                            🔐 Accesos
-                        </button>
                     <button onclick="AdminController.exportAllToPDF()"
                             style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px;">
                         📄 Exportar PDFs
@@ -32,6 +90,12 @@ const AdminView = {
                                 style="background: #22c55e; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px;">
                         Exportar CSV
                         </button>
+                    ${appState.userRole === 'admin' ? `
+                        <button onclick="AdminController.showPasswordModal()"
+                                style="background: #8b5cf6; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                            🔐 Accesos
+                        </button>
+                    ` : ''}
                     </div>
                 </div>
                 

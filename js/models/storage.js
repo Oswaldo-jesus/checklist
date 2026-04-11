@@ -220,13 +220,7 @@ async updateOrden(id, updates) {
                 .order('created_at', { ascending: false });
                 
             if (error) throw error;
-            
-            console.log("📦 Inspecciones descargadas:", data);
-            
-            return data.map(row => {
-                // Si Supabase lo mandó como texto, lo convertimos a objeto
-                return typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
-            });
+            return data.map(row => row.content);
         } catch (error) {
             console.error("Error al cargar reportes de Supabase:", error);
             return [];
@@ -245,13 +239,7 @@ async updateOrden(id, updates) {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            
-            console.log("📦 Órdenes descargadas:", data);
-            
-            return data.map(row => {
-                // Si Supabase lo mandó como texto, lo convertimos a objeto
-                return typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
-            });
+            return data.map(row => row.content);
         } catch (error) {
             console.error("Error al cargar órdenes de Supabase:", error);
             return [];
@@ -323,8 +311,7 @@ async updateOrden(id, updates) {
         
         return csv;
     },
-
-    // Cambiar contraseña de un usuario mediante función segura (RPC)
+    
     async resetUserPassword(email, newPassword) {
         const client = this.init();
         if (!client) throw new Error("Supabase no conectado");

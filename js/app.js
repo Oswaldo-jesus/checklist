@@ -59,14 +59,15 @@ const App = {
         user: null
     },
     
-    // Navegar a un paso específico (MODIFICADO - Agregada limpieza de firmas)
+    // Navegar a un paso específico (Navegación protegida)
     goToStep(step) {
         // --- CANDADO DE SEGURIDAD POR ROLES ---
         const role = this.appState.userRole;
         
         // Bloquear Paneles a cualquier rol que no sea admin
         if (step === 'admin-panel' || step === 'taller-panel') {
-            if (role !== 'admin') {
+            const adminRoles = ['admin', 'cilindros', 'autotanque', 'estaciones', 'supervisor'];
+            if (!adminRoles.includes(role)) {
                 return alert("❌ Acceso denegado: Área exclusiva de Administradores.");
             }
         }
@@ -89,7 +90,7 @@ const App = {
         this.render();
     },
     
-    // Inicializar componentes específicos del paso actual (MODIFICADO)
+    // Inicializar componentes específicos del paso actual
     initStepComponents() {
         switch(this.appState.step) {
             case 'form':
@@ -98,7 +99,6 @@ const App = {
             case 'orden-verificar':
                 SignatureController.initFirmaCanvas('firmaTallerCanvas', 'taller');
                 SignatureController.initFirmaCanvas('firmaChoferCanvas', 'chofer');
-                // Limpiar firmas anteriores
                 if (SignatureController.limpiarFirmaTaller) {
                     SignatureController.limpiarFirmaTaller(this.appState);
                 }
@@ -136,14 +136,14 @@ const App = {
         if (!app) return;
         
         switch(this.appState.step) {
+            case 'login':
+                app.innerHTML = AuthView.renderLogin();
+                break;
             case 'home':
                 app.innerHTML = HomeView.render();
                 setTimeout(() => {
                     HomeView.updateStats();
                 }, 100);
-                break;
-            case 'login':
-                app.innerHTML = AuthView.renderLogin();
                 break;
             case 'form':
                 app.innerHTML = FormView.render(this.appState);
@@ -188,11 +188,11 @@ const App = {
         setTimeout(() => {
             this.initStepComponents();
         }, 50);
-    }, // <-- ESTA COMA ES IMPORTANTE
+    },
     
     // Inicializar la aplicación
     async init() {
-        // 1. Revisar inactividad por si cerraron el navegador (Límite: 15 minutos = 900000 ms)
+        // 1. Revisar inactividad (Límite: 15 minutos)
         const lastActivity = localStorage.getItem('lastActivity');
         const now = Date.now();
         const INACTIVITY_LIMIT = 15 * 60 * 1000;
@@ -200,16 +200,17 @@ const App = {
         if (lastActivity && (now - parseInt(lastActivity)) > INACTIVITY_LIMIT) {
             if (typeof StorageService !== 'undefined') {
                 const client = StorageService.init();
-                if (client) await client.auth.signOut(); // Cerrar sesión silenciosamente en Supabase
+                if (client) await client.auth.signOut();
             }
         }
         localStorage.setItem('lastActivity', now.toString());
 
-        // Revisar si ya hay una sesión de Supabase iniciada (para no pedir login a cada rato)
+        // 2. Revisar sesión activa de Supabase
         if (typeof AuthController !== 'undefined') {
             await AuthController.checkActiveSession();
         }
         
+        // 3. Redirigir al apartado correcto
         setTimeout(() => {
             if (this.appState.user) {
                 this.goToStep('home');
@@ -228,9 +229,9 @@ const App = {
         if(elCheck) elCheck.textContent = reports.length;
         if(elOrden) elOrden.textContent = ordenes.length;
     }
-}; // <-- CIERRE DEL OBJETO App
+};
 
-// --- SISTEMA DE CIERRE DE SESIÓN POR INACTIVIDAD (15 MINUTOS) ---
+// --- SISTEMA DE CIERRE DE SESIÓN POR INACTIVIDAD ---
 let inactivityTimer;
 function resetInactivityTimer() {
     localStorage.setItem('lastActivity', Date.now().toString());

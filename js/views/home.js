@@ -2,9 +2,6 @@
 
 const HomeView = {
     render() {
-        // Extraer el rol, si no hay asignado se considera general
-        const role = App.appState.userRole;
-
         return `
             <div class="container">
                 <div style="text-align: center; padding: 30px 20px;">
@@ -25,26 +22,23 @@ const HomeView = {
                             🔧 Orden de Servicio
                         </button>
                         
-                        ${(role === 'admin') ? `
-                            <button onclick="App.goToStep('admin-panel')" class="btn btn-secondary">
-                                👨‍💼 Panel Administrador
-                            </button>
-                            <button onclick="App.goToStep('taller-panel')" class="btn" style="background: #334155; color: white;">
-                                🛻 Panel Taller
-                            </button>
-                        ` : ''}
+                        <button onclick="App.goToStep('admin-panel')" class="btn btn-secondary">
+                            👨‍💼 Panel Supervisor
+                        </button>
+                        
+                        <button onclick="App.goToStep('taller-panel')" class="btn" style="background: #334155; color: white;">
+                            🛻 Panel Taller
+                        </button>
 
                         <button onclick="App.goToStep('geocercas')" class="btn" style="background: #dd08ec; color: white;">
                             📍 GEOCERCAS
                         </button>
+
                         <button onclick="App.goToStep('supervision-form')" class="btn" style="background: #0867ec; color: white;">
                             👨‍🔧 SUPERVISIÓN EN CAMPO
-                        </button>
-                        <button onclick="App.goToStep('supervision-form')" class="btn" style="background: #334155; color: white;">
-                            📖 ACTA DE HECHOS
-                        </button>
+                        </button>       
 
-                        <button onclick="AuthController.logout()" class="btn btn-danger" style="margin-top: 30px;">
+                        <button onclick="AuthController.logout()" class="btn" style="background: #ef4444; color: white; margin-top: 15px;">
                             🚪 Cerrar Sesión
                         </button>
 

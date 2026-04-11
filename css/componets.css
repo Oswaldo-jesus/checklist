@@ -223,7 +223,8 @@ input:focus, select:focus, textarea:focus {
     .formato-logo {
         width: 80px;
         font-size: 10px;
- /* components.css - Añadir al final del archivo */
+    }
+}
 
 /* Ajustes para nombres largos en firmas */
 .signature-box {
@@ -299,10 +300,4 @@ input:focus, select:focus, textarea:focus {
     
     .formato-label {
         font-size: 6px;
-    }
-}
- 
- 
- 
-    }
-}
+    }}
