@@ -20,14 +20,16 @@ const SupervisionView = {
 
         return `
             <div>
-                <div class="header">
+                <div class="header" style="background: #1e40af; border-bottom: none; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <img src="${CONFIG.LOGO_URL}" alt="Logo" style="height: 40px;">
-                        <div class="logo">Supervisión en Campo</div>
+                        <button onclick="toggleMenu()" class="btn-icon" style="color: white; font-size: 26px;">
+                            <i class='bx bx-menu'></i>
+                        </button>
+                        <img src="${CONFIG.LOGO_URL}" onclick="toggleMenu()" alt="Logo" style="height: 35px; cursor: pointer; object-fit: contain;">
+                        <div class="logo" style="font-weight: 600; font-size: 16px; color: white;">Supervisión en Campo</div>
                     </div>
-                    <button onclick="App.goToStep('home')" 
-                            style="background: none; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 12px;">
-                        Cancelar
+                    <button onclick="App.goToStep('home')" class="btn-icon" title="Volver al inicio" style="color: white;">
+                        <i class='bx bx-home-alt'></i>
                     </button>
                 </div>
                 

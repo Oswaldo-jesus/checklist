@@ -5,27 +5,26 @@ const AuthView = {
         return `
             <div class="container">
                 <div style="text-align: center; padding: 40px 20px;">
-                    <!-- Usa tu logo -->
-                    <div style="margin-bottom: 20px;">
-                        <span style="font-size: 40px;">🔐</span>
+                    <!-- Logo del proyecto en lugar del candado -->
+                    <div style="margin-bottom: 24px; display: flex; justify-content: center;">
+                        <img src="${CONFIG.LOGO_URL}" alt="Logo del Proyecto" style="height: 70px; object-fit: contain;">
                     </div>
-                    <h2 style="color: #1e293b; margin-bottom: 30px;">Iniciar Sesión</h2>
+                    <h2 style="color: #1e293b; margin-bottom: 30px; font-weight: 700;">Iniciar Sesión</h2>
                     
-                    <div class="card" style="max-width: 350px; margin: 0 auto; text-align: left;">
+                    <div class="card" style="max-width: 400px; margin: 0 auto; text-align: left;">
                         <form onsubmit="AuthController.handleLogin(event)">
                             <div class="form-group">
-                                <label style="font-weight: bold; color: #475569;">Correo Electrónico</label>
-                                <input type="email" id="loginEmail" placeholder="usuario@gen.com" required 
-                                       style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; margin-top: 5px;">
+                                <label>Correo Electrónico</label>
+                                <input type="email" id="loginEmail" placeholder="usuario@gen.com" required>
                             </div>
                             
                             <div class="form-group" style="margin-top: 20px;">
-                                <label style="font-weight: bold; color: #475569;">Contraseña</label>
-                                <input type="password" id="loginPassword" placeholder="******" required 
-                                       style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; margin-top: 5px;">
+                                <label>Contraseña</label>
+                                <input type="password" id="loginPassword" placeholder="******" required>
                             </div>
                             
-                            <button type="submit" id="loginBtn" class="btn btn-primary" style="width: 100%; margin-top: 25px; padding: 12px; font-size: 16px;">
+                            <button type="submit" id="loginBtn" class="btn btn-primary" style="margin-top: 30px;">
+                                <i class='bx bx-log-in-circle' style="font-size: 20px;"></i>
                                 Ingresar
                             </button>
                         </form>

@@ -2,49 +2,60 @@
 
 /* Botones */
 .btn {
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     width: 100%;
-    padding: 16px;
-    margin: 10px 0;
+    padding: 14px 20px;
     border: none;
     border-radius: 12px;
-    font-weight: bold;
-    font-size: 16px;
-    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 15px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 .btn:active {
     transform: scale(0.98);
 }
 .btn-primary {
-    background: #1e40af;
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
     color: white;
 }
 .btn-secondary {
-    background: #e2e8f0;
-    color: #475569;
+    background: #f1f5f9;
+    color: #334155;
 }
 .btn-success {
-    background: #22c55e;
+    background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
     color: white;
 }
 .btn-danger {
-    background: #dc2626;
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
     color: white;
 }
 .btn-warning {
-    background: #f59e0b;
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
     color: white;
 }
 
 /* Tarjetas */
 .card {
     background: white;
-    border-radius: 16px;
-    padding: 20px;
+    border-radius: 20px;
+    padding: 24px;
     margin: 0 0 20px 0;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    transition: box-shadow 0.3s ease;
+}
+.card:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
 }
 
 /* Formularios */
@@ -53,34 +64,39 @@
 }
 label {
     display: block;
-    font-size: 12px;
-    font-weight: bold;
-    color: #64748b;
-    margin-bottom: 6px;
-    text-transform: uppercase;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 8px;
 }
 input, select, textarea {
     width: 100%;
-    padding: 12px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    padding: 12px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
     font-size: 16px;
     background: #f8fafc;
+    transition: all 0.2s ease;
 }
 input:focus, select:focus, textarea:focus {
     outline: none;
-    border-color: #1e40af;
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 /* Estilos para el formato de orden de servicio */
 .formato-container {
     width: 100%;
-    border: 1px solid #000;
-    padding: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 12px;
     margin: auto;
     background: white;
     font-size: 9px;
     font-family: Arial, sans-serif;
+    color: #1e293b;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
     overflow-x: auto; /* Permitir scroll horizontal en móviles */
     -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
 }
@@ -90,8 +106,8 @@ input:focus, select:focus, textarea:focus {
     margin-bottom: 5px;
 }
 .formato-table td, .formato-table th {
-    border: 1px solid #444;
-    padding: 3px;
+    border: 1px solid #cbd5e1;
+    padding: 5px;
     vertical-align: top;
 }
 .header-table td { border: none; }
@@ -107,10 +123,12 @@ input:focus, select:focus, textarea:focus {
     font-size: 12px; 
     font-weight: bold; 
     text-transform: uppercase;
+    color: #1e40af;
 }
 .formato-folio { 
     text-align: right; 
     font-size: 10px; 
+    color: #475569;
 }
 .formato-label { 
     font-weight: bold; 
@@ -118,11 +136,11 @@ input:focus, select:focus, textarea:focus {
     display: block; 
     margin-bottom: 1px; 
     text-transform: uppercase; 
-    color: #333;
+    color: #475569;
 }
 .formato-input {
     border: none;
-    border-bottom: 1px solid #666;
+    border-bottom: 1px solid #cbd5e1;
     background: transparent;
     width: 100%;
     font-size: 9px;
@@ -131,11 +149,12 @@ input:focus, select:focus, textarea:focus {
 }
 .formato-line {
     height: 14px;
-    border-bottom: 1px solid #666;
+    border-bottom: 1px solid #cbd5e1;
     margin: 2px 0;
 }
 .formato-box {
-    border: 1px solid #000;
+    border: 1.5px solid #94a3b8;
+    border-radius: 3px;
     width: 12px;
     height: 8px;
     display: inline-block;
@@ -143,7 +162,8 @@ input:focus, select:focus, textarea:focus {
     vertical-align: middle;
 }
 .formato-box.checked {
-    background-color: #000;
+    background-color: #1e40af;
+    border-color: #1e40af;
 }
 .checkbox-group {
     display: flex;
@@ -151,12 +171,14 @@ input:focus, select:focus, textarea:focus {
     gap: 8px;
     margin-top: 3px;
 }
-.bg-light-blue { background-color: #e6f0ff; }
-.bg-medium-blue { background-color: #cbdcf7; }
-.bg-dark-blue { background-color: #a8c4f0; }
+.bg-light-blue { background-color: #f8fafc; }
+.bg-medium-blue { background-color: #eff6ff; color: #1e40af; }
+.bg-dark-blue { background-color: #dbeafe; color: #1e40af; }
 .signature-box {
     height: 30px;
-    border: 1px dashed #666;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    background-color: #f8fafc;
     text-align: center;
     position: relative;
 }
@@ -179,12 +201,14 @@ input:focus, select:focus, textarea:focus {
     display: flex;
     align-items: center;
     margin-bottom: 2px;
+    color: #64748b;
 }
 .color-box {
     width: 20px;
     height: 8px;
     margin-right: 8px;
-    border: 1px solid #666;
+    border: 1px solid #cbd5e1;
+    border-radius: 2px;
 }
 .full-width {
     width: 100%;
@@ -201,6 +225,30 @@ input:focus, select:focus, textarea:focus {
 .mb-2 { margin-bottom: 10px; }
 .py-1 { padding-top: 5px; padding-bottom: 5px; }
 .px-1 { padding-left: 5px; padding-right: 5px; }
+
+/* --- CLASES DE DISTRIBUCIÓN ADAPTATIVA (Web y Móvil) --- */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.grid-responsive {
+    display: grid;
+    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.home-menu-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    margin-bottom: 30px;
+}
+
+.home-menu-grid .btn {
+    height: 100%;
+    margin: 0;
+}
 
 /* --- RESPONSIVE: Componentes en móvil --- */
 @media (max-width: 600px) {

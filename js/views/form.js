@@ -13,39 +13,44 @@ const FormView = {
         
         return `
             <div>
-                <div class="header">
+                <div class="header" style="background: #1e40af; border-bottom: none; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <img src="${CONFIG.LOGO_URL}" alt="Logo" style="height: 40px;">
-                        <div class="logo">Gen Checklist</div>
+                        <button onclick="toggleMenu()" class="btn-icon" style="color: white; font-size: 26px;">
+                            <i class='bx bx-menu'></i>
+                        </button>
+                        <img src="${CONFIG.LOGO_URL}" onclick="toggleMenu()" alt="Logo" style="height: 35px; cursor: pointer; object-fit: contain;">
+                        <div class="logo" style="font-weight: 600; font-size: 16px; color: white;">Gen Checklist</div>
                     </div>
-                    <button onclick="App.goToStep('home')" 
-                            style="background: none; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 12px;">
-                        Cancelar
+                    <button onclick="App.goToStep('home')" class="btn-icon" title="Volver al inicio" style="color: white;">
+                        <i class='bx bx-home-alt'></i>
                     </button>
                 </div>
                 
-                <div class="container">
+                <div class="container" style="max-width: 800px; margin: 0 auto; padding: 24px 16px;">
                     <form id="checklistForm" onsubmit="FormController.handleSubmit(event, App.appState)">
                         <!-- Información básica -->
-                        <div class="card">
-                            <h3 style="margin-bottom: 16px; color: #1e293b;">📄 Información de la Unidad</h3>
+                        <div class="card card-hover" style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05); margin-bottom: 24px; border: 1px solid #f1f5f9;">
+                            <h3 style="margin-bottom: 20px; color: #0f172a; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                                <i class='bx bx-file' style="font-size: 24px; color: #3b82f6;"></i> Información de la Unidad
+                            </h3>
                             
                             <!-- SELECTOR DE TIPO DE RUTA -->
                             <div class="form-group">
-                                <label>Tipo de Ruta <span style="color: #dc2626;">*</span></label>
+                                <label style="display: block; font-size: 14px; font-weight: 500; color: #475569; margin-bottom: 10px;">Tipo de Ruta <span style="color: #ef4444;">*</span></label>
                                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px;">
                                     ${CONFIG.TIPOS_RUTA.map(tipo => `
                                         <button type="button"
+                                                class="menu-item"
                                                 onclick="FormController.updateFormData('tipoRuta', '${tipo}', App.appState)"
-                                                style="padding: 12px; border: 2px solid ${appState.formData.tipoRuta === tipo ? '#1e40af' : '#e2e8f0'}; 
-                                                       background: ${appState.formData.tipoRuta === tipo ? '#1e40af' : '#f8fafc'}; 
-                                                       color: ${appState.formData.tipoRuta === tipo ? 'white' : '#334155'}; 
-                                                       border-radius: 8px; font-weight: bold; font-size: 12px; 
-                                                       cursor: pointer; transition: all 0.2s;">
-                                            ${tipo === 'Utilitario' ? '🚗' : 
-                                              tipo === 'Mantenimiento' ? '🔧' : 
-                                              tipo === 'Montacargas' ? '🏗️' : 
-                                              tipo === 'Cilindros' ? '🧴' : '⛽'} ${tipo}
+                                                style="padding: 14px; border: 1px solid ${appState.formData.tipoRuta === tipo ? '#3b82f6' : '#e2e8f0'}; 
+                                                       background: ${appState.formData.tipoRuta === tipo ? '#eff6ff' : '#ffffff'}; 
+                                                       color: ${appState.formData.tipoRuta === tipo ? '#1d4ed8' : '#475569'}; 
+                                                       border-radius: 12px; font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;
+                                                       cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                            ${tipo === 'Utilitario' ? "<i class='bx bx-car'></i>" : 
+                                              tipo === 'Mantenimiento' ? "<i class='bx bx-wrench'></i>" : 
+                                              tipo === 'Montacargas' ? "<i class='bx bx-package'></i>" : 
+                                              tipo === 'Cilindros' ? "<i class='bx bx-cylinder'></i>" : "<i class='bx bx-gas-pump'></i>"} ${tipo}
                                         </button>
                                     `).join('')}
                                 </div>

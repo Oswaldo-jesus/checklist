@@ -3,9 +3,20 @@
 const HomeView = {
     render() {
         return `
-            <div class="container">
-                <div style="text-align: center; padding: 30px 20px;">
-                    <img src="${CONFIG.LOGO_URL}" alt="Logo" style="height: 80px; margin-bottom: 15px;">
+            <div>
+                <!-- Header Moderno con Logo y Menú -->
+                <div class="header" style="background: #1e40af; color: white; border-bottom: none; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button onclick="toggleMenu()" class="btn-icon" style="color: white; font-size: 26px;">
+                            <i class='bx bx-menu'></i>
+                        </button>
+                        <img src="${CONFIG.LOGO_URL}" onclick="toggleMenu()" style="height: 35px; cursor: pointer; object-fit: contain;" alt="Logo">
+                    </div>
+                    <div style="font-weight: bold; font-size: 14px; color: white;">Inicio</div>
+                </div>
+
+                <div class="container" style="margin-top: 15px;">
+                    <div style="text-align: center; padding: 20px;">
                     <h1 style="font-size: 32px; color: #1e293b; margin-bottom: 8px;">
                         Gen <span style="color: #dc2626;">Checklist</span>
                     </h1>
@@ -13,33 +24,33 @@ const HomeView = {
                         Control de unidades - Planta Qro
                     </p>
                     
-                    <div class="home-buttons">
+                    <div class="home-menu-grid">
                         <button onclick="App.goToStep('form')" class="btn btn-primary">
-                            📋 Nuevo CHECK LIST
+                            <i class='bx bx-list-check' style="font-size: 22px;"></i> Nuevo CHECK LIST
                         </button>
                         
                         <button onclick="App.goToStep('orden-servicio')" class="btn btn-warning">
-                            🔧 Orden de Servicio
+                            <i class='bx bx-wrench' style="font-size: 22px;"></i> Orden de Servicio
                         </button>
                         
-                        <button onclick="App.goToStep('admin-panel')" class="btn btn-secondary">
-                            👨‍💼 Panel Supervisor
+                        <button onclick="App.goToStep('admin-panel')" class="btn" style="background: #0f172a; color: white;">
+                            <i class='bx bx-shield-quarter' style="font-size: 22px;"></i> Panel Supervisor
                         </button>
                         
                         <button onclick="App.goToStep('taller-panel')" class="btn" style="background: #334155; color: white;">
-                            🛻 Panel Taller
+                            <i class='bx bx-car' style="font-size: 22px;"></i> Panel Taller
                         </button>
 
-                        <button onclick="App.goToStep('geocercas')" class="btn" style="background: #dd08ec; color: white;">
-                            📍 GEOCERCAS
+                        <button onclick="App.goToStep('geocercas')" class="btn" style="background: linear-gradient(135deg, #d946ef 0%, #9333ea 100%); color: white;">
+                            <i class='bx bx-map-alt' style="font-size: 22px;"></i> GEOCERCAS
                         </button>
 
-                        <button onclick="App.goToStep('supervision-form')" class="btn" style="background: #0867ec; color: white;">
-                            👨‍🔧 SUPERVISIÓN EN CAMPO
+                        <button onclick="App.goToStep('supervision-form')" class="btn" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white;">
+                            <i class='bx bx-user-pin' style="font-size: 22px;"></i> SUPERVISIÓN EN CAMPO
                         </button>       
 
-                        <button onclick="AuthController.logout()" class="btn" style="background: #ef4444; color: white; margin-top: 15px;">
-                            🚪 Cerrar Sesión
+                        <button onclick="AuthController.logout()" class="btn btn-secondary">
+                            <i class='bx bx-log-out' style="font-size: 22px;"></i> Cerrar Sesión
                         </button>
 
                     </div>

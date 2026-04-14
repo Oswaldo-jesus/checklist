@@ -816,7 +816,10 @@ const AdminController = {
         
         const html = `
             <div style="padding: 20px; text-align: left; font-family: Arial, sans-serif;">
-                <h3 style="margin-bottom: 10px; color: #1e293b; font-size: 18px;">🔐 Cambiar Contraseña</h3>
+                <h3 style="margin-bottom: 15px; color: #1e293b; font-size: 18px; display: flex; align-items: center; gap: 10px;">
+                    <img src="${CONFIG.LOGO_URL}" alt="Gen Logo" style="height: 28px; object-fit: contain;">
+                    Cambiar Contraseña
+                </h3>
                 <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">
                     Ingresa el correo del empleado y su nueva contraseña.
                 </p>

@@ -67,17 +67,16 @@ const AdminView = {
     renderPanel(appState) {
         return `
             <div>
-                <div class="header" style="background: #1e293b; color: white;">
+                <div class="header" style="background: #1e40af; color: white; border-bottom: none; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <button onclick="App.goToStep('home')"
-                                style="background: none; border: none; color: white; font-size: 20px;">
-                            ←
+                        <button onclick="toggleMenu()" class="btn-icon" style="color: white; font-size: 26px;">
+                            <i class='bx bx-menu'></i>
                         </button>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <img src="${CONFIG.LOGO_URL}" style="height: 35px; background: white; padding: 2px; border-radius: 4px;">
-                            <div>
-                                <div class="logo" style="color: white;">Panel Supervisor</div>
-                                <div style="font-size: 10px; opacity: 0.8;">Gestión de reportes y órdenes</div>
+                        <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="toggleMenu()">
+                            <img src="${CONFIG.LOGO_URL}" style="height: 35px; object-fit: contain;">
+                            <img src="${CONFIG.LOGO_URL}" style="height: 35px; object-fit: contain;">
+                            <div style="display: none; @media(min-width:600px){display:block;}">
+                                <div class="logo" style="color: white; font-size: 16px;">Panel Supervisor</div>
                             </div>
                         </div>
                     </div>
@@ -136,22 +135,22 @@ const AdminView = {
                         </div>
                     </div>
                     
-                    <!-- Pestañas -->
-                    <div style="display: flex; margin-bottom: 16px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap;">
+                    <!-- Pestañas (Segmented Control) -->
+                    <div style="display: flex; margin-bottom: 24px; background: #f1f5f9; padding: 6px; border-radius: 16px; flex-wrap: wrap; gap: 4px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
                         <button id="tabChecklistsBtn" onclick="AdminController.switchTab('checklists')" 
-                                style="flex: 1; min-width: 100px; padding: 12px; background: ${appState.activeTab === 'checklists' ? '#1e40af' : '#f8fafc'}; color: ${appState.activeTab === 'checklists' ? 'white' : '#475569'}; border: none; font-weight: bold; cursor: pointer; transition: all 0.3s;">
+                                style="flex: 1; min-width: 120px; padding: 10px 16px; background: ${appState.activeTab === 'checklists' ? 'white' : 'transparent'}; color: ${appState.activeTab === 'checklists' ? '#1e40af' : '#64748b'}; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: ${appState.activeTab === 'checklists' ? '0 4px 6px rgba(0,0,0,0.05)' : 'none'};">
                             📋 Inspecciones
                         </button>
                         <button id="tabOrdenesBtn" onclick="AdminController.switchTab('ordenes')" 
-                                style="flex: 1; min-width: 100px; padding: 12px; background: ${appState.activeTab === 'ordenes' ? '#f59e0b' : '#f8fafc'}; color: ${appState.activeTab === 'ordenes' ? 'white' : '#475569'}; border: none; font-weight: bold; cursor: pointer; transition: all 0.3s;">
+                                style="flex: 1; min-width: 120px; padding: 10px 16px; background: ${appState.activeTab === 'ordenes' ? 'white' : 'transparent'}; color: ${appState.activeTab === 'ordenes' ? '#f59e0b' : '#64748b'}; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: ${appState.activeTab === 'ordenes' ? '0 4px 6px rgba(0,0,0,0.05)' : 'none'};">
                             🔧 Órdenes
                         </button>
                         <button id="tabSupervisionesBtn" onclick="AdminController.switchTab('supervisiones')" 
-                                style="flex: 1; min-width: 100px; padding: 12px; background: ${appState.activeTab === 'supervisiones' ? '#0867ec' : '#f8fafc'}; color: ${appState.activeTab === 'supervisiones' ? 'white' : '#475569'}; border: none; font-weight: bold; cursor: pointer; transition: all 0.3s;">
+                                style="flex: 1; min-width: 120px; padding: 10px 16px; background: ${appState.activeTab === 'supervisiones' ? 'white' : 'transparent'}; color: ${appState.activeTab === 'supervisiones' ? '#0867ec' : '#64748b'}; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: ${appState.activeTab === 'supervisiones' ? '0 4px 6px rgba(0,0,0,0.05)' : 'none'};">
                             👨‍🔧 Supervisiones
                         </button>
                         <button id="tabMapasBtn" onclick="AdminController.switchTab('mapas')" 
-                                style="flex: 1; min-width: 100px; padding: 12px; background: ${appState.activeTab === 'mapas' ? '#10b981' : '#f8fafc'}; color: ${appState.activeTab === 'mapas' ? 'white' : '#475569'}; border: none; font-weight: bold; cursor: pointer; transition: all 0.3s;">
+                                style="flex: 1; min-width: 120px; padding: 10px 16px; background: ${appState.activeTab === 'mapas' ? 'white' : 'transparent'}; color: ${appState.activeTab === 'mapas' ? '#10b981' : '#64748b'}; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: ${appState.activeTab === 'mapas' ? '0 4px 6px rgba(0,0,0,0.05)' : 'none'};">
                             🗺️ Mapas de Quejas
                         </button>
                     </div>
@@ -181,17 +180,15 @@ const AdminView = {
     renderTallerPanel(appState) {
         return `
             <div>
-                <div class="header" style="background: #0f172a; color: white;">
+                <div class="header" style="background: #1e40af; color: white; border-bottom: none; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <button onclick="App.goToStep('home')"
-                                style="background: none; border: none; color: white; font-size: 20px;">
-                            ←
+                        <button onclick="toggleMenu()" class="btn-icon" style="color: white; font-size: 26px;">
+                            <i class='bx bx-menu'></i>
                         </button>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <img src="${CONFIG.LOGO_URL}" style="height: 35px; background: white; padding: 2px; border-radius: 4px;">
-                            <div>
-                                <div class="logo" style="color: white;">Panel Taller</div>
-                                <div style="font-size: 10px; opacity: 0.8;">Gestión de órdenes de servicio</div>
+                        <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="toggleMenu()">
+                            <img src="${CONFIG.LOGO_URL}" style="height: 35px; object-fit: contain; background: white; padding: 2px; border-radius: 4px;">
+                            <div style="display: none; @media(min-width:600px){display:block;}">
+                                <div class="logo" style="color: white; font-size: 16px;">Panel Taller</div>
                             </div>
                         </div>
                     </div>
@@ -294,13 +291,13 @@ const AdminView = {
             
             return `
                 <tr>
-                    <td style="border: 1px solid #000; padding: 4px; font-size: 9px;">${component}</td>
-                    <td style="border: 1px solid #000; padding: 4px; font-size: 9px;">${criterion}</td>
-                    <td style="border: 1px solid #000; padding: 4px; font-size: 9px; text-align: center; font-weight: bold;">
-                        ${isApproved ? 'X' : ''}
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-size: 9px; color: #334155;">${component}</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-size: 9px; color: #334155;">${criterion}</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-size: 9px; text-align: center; font-weight: bold; color: #1e40af;">
+                        ${isApproved ? '✓' : ''}
                     </td>
-                    <td style="border: 1px solid #000; padding: 4px; font-size: 9px; text-align: center; font-weight: bold; color: ${isRejected ? '#dc2626' : '#000'};">
-                        ${isRejected ? 'X' : ''}
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-size: 9px; text-align: center; font-weight: bold; color: ${isRejected ? '#dc2626' : '#334155'};">
+                        ${isRejected ? '✗' : ''}
                     </td>
                 </tr>
             `;

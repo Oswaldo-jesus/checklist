@@ -206,3 +206,101 @@ body {
         display: none; /* Ocultar controles de zoom en móvil si ocupan mucho espacio */
     }
 }
+
+/* ==========================================================================
+   EFECTOS DINÁMICOS Y MODERNOS (HOVERS, TRANSICIONES, ICONOS)
+   ========================================================================== */
+
+/* Transiciones suaves globales para todos los elementos interactivos */
+button, a, .card, input, select, textarea {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Efecto de elevación para tarjetas */
+.card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 20px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04) !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* Botones de acción modernos (Solo icono, ej. flecha de retroceso) */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #64748b;
+    font-size: 24px;
+    cursor: pointer;
+}
+.btn-icon:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+.btn-icon:active {
+    transform: scale(0.92);
+}
+
+/* Efectos para menús laterales y botones de selección */
+.menu-item {
+    position: relative;
+    overflow: hidden;
+}
+.menu-item:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+}
+.menu-item:active {
+    transform: translateY(0);
+}
+.menu-item i {
+    font-size: 20px;
+    margin-right: 8px;
+}
+
+/* ==========================================================================
+   SIDEBAR / OFF-CANVAS MENU GLOBALES
+   ========================================================================== */
+.sidebar-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(3px);
+    z-index: 9998;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+.sidebar-menu {
+    position: fixed;
+    top: 0; left: -320px;
+    width: 280px; height: 100%;
+    background: #ffffff;
+    z-index: 9999;
+    box-shadow: 4px 0 25px rgba(0,0,0,0.15);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+.sidebar-menu.active { left: 0; }
+.sidebar-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px; border-bottom: 1px solid #f1f5f9;
+}
+.sidebar-content { padding: 15px; overflow-y: auto; }
+.sidebar-content a {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; color: #334155; text-decoration: none;
+    font-weight: 600; border-radius: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 4px;
+}
+.sidebar-content a:hover {
+    background: #f8fafc; color: #1e40af; transform: translateX(4px);
+}
