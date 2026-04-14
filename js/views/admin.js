@@ -74,14 +74,13 @@ const AdminView = {
                         </button>
                         <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="toggleMenu()">
                             <img src="${CONFIG.LOGO_URL}" style="height: 35px; object-fit: contain;">
-                            <img src="${CONFIG.LOGO_URL}" style="height: 35px; object-fit: contain;">
                             <div style="display: none; @media(min-width:600px){display:block;}">
                                 <div class="logo" style="color: white; font-size: 16px;">Panel Supervisor</div>
                             </div>
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px;">
-                    <button onclick="AdminController.exportAllToPDF()"
+                    <button onclick="AdminController.showExportOptions()"
                             style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px;">
                         📄 Exportar PDFs
                     </button>
@@ -155,6 +154,27 @@ const AdminView = {
                         </button>
                     </div>
                     
+                    <!-- Sub-pestañas divisoras para Inspecciones -->
+                    <style>.sub-tabs-container::-webkit-scrollbar { display: none; }</style>
+                    <div id="subTabsChecklists" class="sub-tabs-container" style="display: ${appState.activeTab === 'checklists' ? 'flex' : 'none'}; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none;">
+                        ${['Todos', 'Utilitario', 'Mantenimiento', 'Montacargas', 'Cilindros', 'Autotanque'].map(tipo => {
+                            const isActive = (!appState.filterTipoRuta && tipo === 'Todos') || appState.filterTipoRuta === tipo;
+                            return `
+                                <button id="btnSubFilter-${tipo}" onclick="AdminController.updateFilterTipoRuta('${tipo}')"
+                                        style="white-space: nowrap; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+                                               border: 1px solid ${isActive ? '#1e40af' : '#cbd5e1'};
+                                               background: ${isActive ? '#eff6ff' : '#f8fafc'};
+                                               color: ${isActive ? '#1e40af' : '#475569'};">
+                                    ${tipo === 'Todos' ? '📋 Todos' : 
+                                      tipo === 'Utilitario' ? '🚗 Utilitario' :
+                                      tipo === 'Mantenimiento' ? '🔧 Mantenimiento' :
+                                      tipo === 'Montacargas' ? '📦 Montacargas' :
+                                      tipo === 'Cilindros' ? '🛢️ Cilindros' : '🚛 Autotanque'}
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+
                     <!-- Gráfica de Resumen (solo para no mapas) -->
                     ${appState.activeTab !== 'mapas' ? `
                         <div class="card" style="margin-bottom: 16px;">
@@ -193,7 +213,7 @@ const AdminView = {
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px;">
-                        <button onclick="AdminController.exportAllToPDF()"
+                        <button onclick="AdminController.showExportOptions()"
                                 style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px;">
                             📄 Exportar PDF
                         </button>

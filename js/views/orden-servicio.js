@@ -25,7 +25,7 @@ const OrdenServicioView = {
                         <div class="card">
                             <h3 style="margin-bottom: 16px; color: #1e293b;">📋 Datos de la Orden</h3>
                             
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="grid-responsive" style="margin-bottom: 0;">
                                 <div class="form-group">
                                     <label>Unidad</label>
                                     <input type="text" 
@@ -65,7 +65,7 @@ const OrdenServicioView = {
                                 </datalist>
                             </div>
                             
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                            <div class="grid-responsive" style="margin-bottom: 16px;">
                                 <div class="form-group">
                                     <label>Hora del Reporte</label>
                                     <input type="time" 
@@ -97,7 +97,7 @@ const OrdenServicioView = {
                             
                             <div class="form-group">
                                 <label>Lugar del Mantenimiento</label>
-                                <div style="display: flex; gap: 20px; margin-top: 8px;">
+                                <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 8px;">
                                     <label style="display: flex; align-items: center; gap: 5px;">
                                         <input type="radio" 
                                                name="mantenimientoLugar" 
@@ -119,7 +119,7 @@ const OrdenServicioView = {
                             
                             <div class="form-group">
                                 <label>Tipo de Mantenimiento</label>
-                                <div style="display: flex; gap: 15px; margin-top: 8px;">
+                                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 8px;">
                                     ${CONFIG.TIPOS_MANTENIMIENTO.map(tipo => {
                                         const value = tipo.toLowerCase().includes('correctivo') ? 'correctivo' : 
                                                      tipo.toLowerCase().includes('preventivo') ? 'preventivo' : 'otras';
@@ -157,9 +157,9 @@ const OrdenServicioView = {
                             
                             <div class="form-group">
                                 <label>Puntos Críticos Revisados (Selecciona los verificados)</label>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 8px;">
                                     ${CONFIG.PUNTOS_CRITICOS.map((punto, index) => `
-2345                                        <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; padding: 10px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; height: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                        <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; padding: 10px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; height: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                                             <input type="checkbox" 
                                                    value="${punto}"
                                                    ${appState.ordenData.puntosCriticos.includes(punto) ? 'checked' : ''}

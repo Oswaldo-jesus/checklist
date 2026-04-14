@@ -13,6 +13,7 @@ const App = {
         supervisiones: [],
         filterDate: '',
         filterSearch: '',
+        filterTipoRuta: 'Todos',
         activeTab: 'checklists',
         formData: { operador: '', eco: '', km: '', ruta: '', observaciones: '' },
         ordenData: { 

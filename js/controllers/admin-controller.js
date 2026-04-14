@@ -28,6 +28,10 @@ const AdminController = {
     switchTab(tab) {
         App.appState.activeTab = tab;
         this.updateTabStyles(tab);
+        
+        const subTabs = document.getElementById('subTabsChecklists');
+        if (subTabs) subTabs.style.display = tab === 'checklists' ? 'flex' : 'none';
+        
         if (tab === 'mapas') {
             const c = document.getElementById('reportsList');
             if (c) { c.innerHTML = MapaQuejasView.render(); setTimeout(() => MapaQuejasView.initMapa?.(), 200); }
@@ -53,6 +57,27 @@ const AdminController = {
     updateTallerFilter(s) { 
         App.appState.filterSearch = s; 
         this.loadTallerPanel(); 
+    },
+
+    // Filtro por Tipo de Ruta (Sub-pestañas)
+    updateFilterTipoRuta(tipo) {
+        App.appState.filterTipoRuta = tipo;
+        // Actualizar estilos de los botones
+        ['Todos', 'Utilitario', 'Mantenimiento', 'Montacargas', 'Cilindros', 'Autotanque'].forEach(t => {
+            const btn = document.getElementById(`btnSubFilter-${t}`);
+            if (btn) {
+                if (t === tipo) {
+                    btn.style.border = '1px solid #1e40af';
+                    btn.style.background = '#eff6ff';
+                    btn.style.color = '#1e40af';
+                } else {
+                    btn.style.border = '1px solid #cbd5e1';
+                    btn.style.background = '#f8fafc';
+                    btn.style.color = '#475569';
+                }
+            }
+        });
+        this.loadReportsIntoPanel();
     },
 
     // Estilos de pestañas
@@ -125,6 +150,11 @@ const AdminController = {
                 }
                 return true;
             }).filter(i => {
+                // Filtro por Tipo de Ruta (solo Inspecciones)
+                if (App.appState.activeTab === 'checklists' && App.appState.filterTipoRuta && App.appState.filterTipoRuta !== 'Todos') {
+                    if (i.tipoRuta !== App.appState.filterTipoRuta) return false;
+                }
+
                 // Filtro de búsqueda por texto (sin cambios)
                 if (!App.appState.filterSearch) return true;
                 const s = App.appState.filterSearch.toLowerCase();
@@ -524,6 +554,12 @@ const AdminController = {
         if (!data.length) return alert('Sin datos');
         
         let filtered = data;
+        
+        // Aplicar filtro de tipo de ruta si estamos en inspecciones
+        if (App.appState.activeTab === 'checklists' && App.appState.filterTipoRuta && App.appState.filterTipoRuta !== 'Todos') {
+            filtered = filtered.filter(i => i.tipoRuta === App.appState.filterTipoRuta);
+        }
+        
         if (App.appState.filterSearch) {
             const s = App.appState.filterSearch.toLowerCase();
             filtered = filtered.filter(i => i.operador?.toLowerCase().includes(s) || 
@@ -552,78 +588,122 @@ const AdminController = {
         return '';
     },
 
-    // Exportar todos los reportes filtrados a PDFs individuales (uno por uno)
-    async exportAllToPDF() {
+    // Mostrar opciones de exportación
+    showExportOptions() {
         const isTaller = App.appState.step === 'taller-panel';
         const activeTab = isTaller ? 'ordenes' : App.appState.activeTab;
 
         if (activeTab === 'mapas') return alert('Esta función no aplica para el mapa.');
+        
+        const html = `
+            <div style="padding: 24px; text-align: center; font-family: 'Inter', sans-serif;">
+                <div style="width: 60px; height: 60px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                    <i class='bx bxs-file-pdf' style="font-size: 32px; color: #1e40af;"></i>
+                </div>
+                <h3 style="margin-bottom: 8px; color: #1e293b; font-size: 20px;">Exportar Documentos</h3>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 24px;">
+                    ¿Qué registros deseas exportar como PDFs individuales?
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button onclick="ModalService.close(); AdminController.exportAllToPDF('filtered')" 
+                            class="btn btn-primary" style="padding: 12px;">
+                        <i class='bx bx-filter-alt'></i> Solo los filtrados en pantalla
+                    </button>
+                    <button onclick="ModalService.close(); AdminController.exportAllToPDF('all')" 
+                            class="btn btn-secondary" style="padding: 12px; background: #f8fafc; color: #1e293b; border: 1px solid #e2e8f0;">
+                        <i class='bx bx-list-ul'></i> Todos los registros generales
+                    </button>
+                    <button onclick="ModalService.close()" 
+                            style="margin-top: 8px; background: transparent; border: none; color: #64748b; font-size: 13px; cursor: pointer; text-decoration: underline;">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        `;
+        ModalService.show(html);
+    },
+
+    // Exportar todos los reportes filtrados a PDFs individuales (uno por uno)
+    async exportAllToPDF(exportMode = 'filtered') {
+        const isTaller = App.appState.step === 'taller-panel';
+        const activeTab = isTaller ? 'ordenes' : App.appState.activeTab;
 
         // 1. Obtener los datos según la pestaña
         let items = activeTab === 'checklists' ? await StorageService.loadReports() :
                     activeTab === 'ordenes' ? await StorageService.loadOrdenes() :
                     JSON.parse(localStorage.getItem('supervisiones') || '[]');
         
-        // 2. Aplicar los mismos filtros que se ven en pantalla
+        // 2. Aplicar filtros SOLO si el usuario eligió 'filtered'
         let filtered = items;
-        if (isTaller) {
-            if (App.appState.filterSearch) {
-                const s = App.appState.filterSearch.toLowerCase();
-                filtered = items.filter(i => i.unidad?.toLowerCase().includes(s) || 
-                                         i.folio?.toString().toLowerCase().includes(s) || 
-                                         i.operador?.toLowerCase().includes(s));
-            }
-        } else {
-            filtered = items.filter(i => {
-                let itemYear, itemMonth, itemDay;
-                if (i.timestamp) {
-                    const fecha = new Date(i.timestamp);
-                    itemYear = fecha.getFullYear(); itemMonth = fecha.getMonth() + 1; itemDay = fecha.getDate();
-                } else if (i.fecha) {
-                    if (i.fecha.includes('/')) {
-                        const [dia, mes, año] = i.fecha.split('/').map(Number);
-                        itemYear = año; itemMonth = mes; itemDay = dia;
-                    } else if (i.fecha.includes('-')) {
-                        const [año, mes, dia] = i.fecha.split('-').map(Number);
-                        itemYear = año; itemMonth = mes; itemDay = dia;
+        if (exportMode === 'filtered') {
+            if (isTaller) {
+                if (App.appState.filterSearch) {
+                    const s = App.appState.filterSearch.toLowerCase();
+                    filtered = items.filter(i => i.unidad?.toLowerCase().includes(s) || 
+                                             i.folio?.toString().toLowerCase().includes(s) || 
+                                             i.operador?.toLowerCase().includes(s));
+                }
+            } else {
+                filtered = items.filter(i => {
+                    let itemYear, itemMonth, itemDay;
+                    if (i.timestamp) {
+                        const fecha = new Date(i.timestamp);
+                        itemYear = fecha.getFullYear(); itemMonth = fecha.getMonth() + 1; itemDay = fecha.getDate();
+                    } else if (i.fecha) {
+                        if (i.fecha.includes('/')) {
+                            const [dia, mes, año] = i.fecha.split('/').map(Number);
+                            itemYear = año; itemMonth = mes; itemDay = dia;
+                        } else if (i.fecha.includes('-')) {
+                            const [año, mes, dia] = i.fecha.split('-').map(Number);
+                            itemYear = año; itemMonth = mes; itemDay = dia;
+                        }
                     }
-                }
 
-                if (App.appState.filterMonth) {
-                    if (!itemYear || !itemMonth) return false;
-                    const [year, month] = App.appState.filterMonth.split('-').map(Number);
-                    if (itemYear !== year || itemMonth !== month) return false;
-                }
+                    if (App.appState.filterMonth) {
+                        if (!itemYear || !itemMonth) return false;
+                        const [year, month] = App.appState.filterMonth.split('-').map(Number);
+                        if (itemYear !== year || itemMonth !== month) return false;
+                    }
 
-                if (App.appState.filterDate) {
-                    if (!itemYear || !itemMonth || !itemDay) return false;
-                    const [year, month, day] = App.appState.filterDate.split('-').map(Number);
-                    if (itemYear !== year || itemMonth !== month || itemDay !== day) return false;
-                }
-                return true;
-            }).filter(i => {
-                if (!App.appState.filterSearch) return true;
-                const s = App.appState.filterSearch.toLowerCase();
-                if (activeTab === 'supervisiones') {
-                    return (i.nombreSupervisor?.toLowerCase().includes(s) || i.nombreCliente?.toLowerCase().includes(s) || i.numeroPedido?.toLowerCase().includes(s) || i.telefonoCliente?.toLowerCase().includes(s) || i.motivoQueja?.toLowerCase().includes(s) || i.ubicacion?.toLowerCase().includes(s));
-                } else {
-                    return (i.operador?.toLowerCase().includes(s) || i.unidad?.toLowerCase().includes(s) || i.ecoUnidad?.toLowerCase().includes(s) || i.ruta?.toLowerCase().includes(s) || i.descripcion?.toLowerCase().includes(s) || i.descripcionFalla?.toLowerCase().includes(s) || i.folio?.toString().includes(s));
-                }
-            });
+                    if (App.appState.filterDate) {
+                        if (!itemYear || !itemMonth || !itemDay) return false;
+                        const [year, month, day] = App.appState.filterDate.split('-').map(Number);
+                        if (itemYear !== year || itemMonth !== month || itemDay !== day) return false;
+                    }
+                    return true;
+                }).filter(i => {
+                    // Filtro de tipo de ruta en la exportación
+                    if (activeTab === 'checklists' && App.appState.filterTipoRuta && App.appState.filterTipoRuta !== 'Todos') {
+                        if (i.tipoRuta !== App.appState.filterTipoRuta) return false;
+                    }
+                    
+                    if (!App.appState.filterSearch) return true;
+                    const s = App.appState.filterSearch.toLowerCase();
+                    if (activeTab === 'supervisiones') {
+                        return (i.nombreSupervisor?.toLowerCase().includes(s) || i.nombreCliente?.toLowerCase().includes(s) || i.numeroPedido?.toLowerCase().includes(s) || i.telefonoCliente?.toLowerCase().includes(s) || i.motivoQueja?.toLowerCase().includes(s) || i.ubicacion?.toLowerCase().includes(s));
+                    } else {
+                        return (i.operador?.toLowerCase().includes(s) || i.unidad?.toLowerCase().includes(s) || i.ecoUnidad?.toLowerCase().includes(s) || i.ruta?.toLowerCase().includes(s) || i.descripcion?.toLowerCase().includes(s) || i.descripcionFalla?.toLowerCase().includes(s) || i.folio?.toString().includes(s));
+                    }
+                });
+            }
         }
 
-        if (!filtered.length) return alert('No hay registros para exportar con los filtros actuales.');
-        if (!confirm(`Se van a descargar ${filtered.length} archivos PDF individuales.\n\nIMPORTANTE: Tu navegador podría pedirte permiso para "Descargar múltiples archivos". Por favor dale en "Permitir".\n\n¿Deseas continuar?`)) return;
+        if (!filtered.length) return alert('No hay registros para exportar.');
 
-        // 3. Mostrar pantalla de carga interactiva
+        // 3. Mostrar pantalla de carga estética (Sin fondos negros)
         const loadingDiv = document.createElement('div');
-        loadingDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);color:white;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:99999;font-family:sans-serif;';
+        loadingDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.9);backdrop-filter:blur(5px);color:#1e293b;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:99999;font-family:"Inter", sans-serif;';
         loadingDiv.innerHTML = `
-            <div class="spinner" style="margin-bottom:20px; width:50px; height:50px; border:5px solid #f3f3f3; border-top:5px solid #3b82f6; border-radius:50%; animation:spin 1s linear infinite;"></div>
+            <div class="spinner" style="margin-bottom:24px; width:60px; height:60px; border:4px solid #e2e8f0; border-top:4px solid #1e40af; border-radius:50%; animation:spin 1s linear infinite;"></div>
             <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-            <h2 style="margin:0 0 10px 0;">Generando PDFs individuales...</h2>
-            <p id="pdfProgress" style="font-size:18px; font-weight:bold; color:#32cd32;">Preparando 0 de ${filtered.length}</p>
-            <p style="font-size:14px; margin-top:20px; color:#cbd5e1; text-align:center; max-width:80%;">Por favor, no cierres esta ventana mientras se descargan.<br>Asegúrate de permitir las descargas múltiples si el navegador te lo pregunta.</p>
+            <h2 style="margin:0 0 12px 0; color:#0f172a; font-size:22px;">Generando PDFs individuales</h2>
+            <div style="background:#eff6ff; padding:8px 16px; border-radius:20px; border:1px solid #bfdbfe;">
+                <p id="pdfProgress" style="font-size:16px; font-weight:bold; color:#1d4ed8; margin:0;">Preparando 0 de ${filtered.length}</p>
+            </div>
+            <p style="font-size:13px; margin-top:24px; color:#64748b; text-align:center; max-width:80%; line-height:1.5;">
+                Por favor, no cierres esta ventana mientras se descargan.<br>
+                Asegúrate de <strong>permitir descargas múltiples</strong> si el navegador lo solicita.
+            </p>
         `;
         document.body.appendChild(loadingDiv);
         const progressText = document.getElementById('pdfProgress');
@@ -684,7 +764,17 @@ const AdminController = {
                 // Damos un poco más de tiempo (1.2 seg) entre descargas para no trabar el navegador
                 await new Promise(resolve => setTimeout(resolve, 1200));
             }
-            alert(`✅ Se han descargado ${filtered.length} PDFs correctamente.`);
+            
+            ModalService.show(`
+                <div style="padding: 30px; text-align: center; font-family: 'Inter', sans-serif;">
+                    <div style="width: 60px; height: 60px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                        <i class='bx bx-check' style="font-size: 40px; color: #16a34a;"></i>
+                    </div>
+                    <h2 style="color: #166534; margin-bottom: 12px; font-size: 22px;">¡Descarga Completada!</h2>
+                    <p style="color: #475569; margin-bottom: 24px; font-size: 14px;">Se han descargado <strong>${filtered.length}</strong> documentos PDF en tu dispositivo.</p>
+                    <button onclick="ModalService.close()" class="btn btn-success" style="width: auto; padding: 10px 30px;">Aceptar</button>
+                </div>
+            `);
         } catch (error) {
             console.error('Error generando PDFs:', error);
             alert('Ocurrió un error al generar los PDFs. Verifica la consola para más detalles.');
@@ -779,8 +869,13 @@ const AdminController = {
         }
         
         const loadingDiv = document.createElement('div');
-        loadingDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:10000;text-align:center;';
-        loadingDiv.innerHTML = '<div class="spinner" style="margin:10px auto;"></div><p>Generando PDF, por favor espera...</p>';
+        loadingDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.8);backdrop-filter:blur(4px);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:10000;';
+        loadingDiv.innerHTML = `
+            <div style="background:white;padding:30px;border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,0.1);text-align:center;border:1px solid #f1f5f9;">
+                <div class="spinner" style="margin:0 auto 15px auto; width:40px; height:40px; border:3px solid #e2e8f0; border-top:3px solid #1e40af;"></div>
+                <p style="color:#1e293b; font-weight:600; margin:0; font-family:'Inter', sans-serif;">Generando documento PDF...</p>
+            </div>
+        `;
         document.body.appendChild(loadingDiv);
         
         const opt = {
@@ -855,8 +950,16 @@ const AdminController = {
 
         try {
             await StorageService.resetUserPassword(email, password);
-            alert(`✅ Contraseña actualizada correctamente para ${email}`);
-            ModalService.close();
+            ModalService.show(`
+                <div style="padding: 30px; text-align: center; font-family: 'Inter', sans-serif;">
+                    <div style="width: 60px; height: 60px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                        <i class='bx bx-check' style="font-size: 40px; color: #16a34a;"></i>
+                    </div>
+                    <h2 style="color: #166534; margin-bottom: 12px; font-size: 20px;">Contraseña Actualizada</h2>
+                    <p style="color: #475569; margin-bottom: 24px; font-size: 14px;">La contraseña de <strong>${email}</strong> fue cambiada exitosamente.</p>
+                    <button onclick="ModalService.close()" class="btn btn-success" style="width: auto; padding: 10px 30px;">Aceptar</button>
+                </div>
+            `);
         } catch (error) {
             alert(`❌ Error: ${error.message}`);
         } finally {

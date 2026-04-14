@@ -36,8 +36,6 @@ const AuthController = {
             App.appState.userRole = role;
             App.appState.user = data.user;
             
-            alert(`✅ Bienvenido. Nivel de acceso: ${role.toUpperCase()}`);
-            
             // 4. Redirigir al menú principal (que ahora es exclusivo para logueados)
             App.goToStep('home');
             
