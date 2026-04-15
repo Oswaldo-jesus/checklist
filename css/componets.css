@@ -91,6 +91,12 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
+/* Ajuste específico para inputs de fecha en móviles (iOS/Android) */
+input[type="date"], input[type="month"], input[type="time"] {
+    padding: 10px 12px; /* Menor padding para evitar desbordamientos del texto */
+    min-height: 44px; /* Altura mínima recomendada para toques táctiles de Apple/Google */
+}
+
 /* Estilos para el formato de orden de servicio */
 .formato-container {
     width: 100%;

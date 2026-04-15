@@ -94,7 +94,7 @@ const AdminView = {
                 <div class="container" style="padding: 16px; max-width: 800px; margin: 0 auto; box-sizing: border-box;">
                     <!-- Filtros -->
                     <div class="card" style="margin-bottom: 20px; box-sizing: border-box; width: 100%;">
-                        <div style="display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+                        <div style="display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
                             <div class="form-group" style="margin-bottom: 0;">
                                 <label>Filtrar por mes</label>
                                 <input type="month" 
@@ -240,8 +240,8 @@ const AdminView = {
                 <div class="container">
                     <!-- Filtros simplificados -->
                     <div class="card">
-                        <div style="display: flex; gap: 10px; align-items: flex-end;">
-                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+                            <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
                                 <label>Buscar por unidad o folio</label>
                                 <input type="text" 
                                         id="filterSearch"
