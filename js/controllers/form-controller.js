@@ -57,6 +57,31 @@ const FormController = {
         App.render();
     },
     
+    // Previsualizar el checklist antes de guardar
+    previewChecklist(appState) {
+        // Validaciones básicas previas a la previsualización
+        if (!appState.formData.tipoRuta) {
+            alert("Por favor, selecciona el tipo de ruta.");
+            return;
+        }
+        if (!appState.formData.operador || !appState.formData.eco || 
+            !appState.formData.km || !appState.formData.ruta) {
+            alert("Por favor, completa todos los campos de información.");
+            return;
+        }
+        if (!appState.signature) {
+            alert("Por favor, firma el documento de conformidad en el recuadro inferior antes de previsualizar.");
+            return;
+        }
+        App.goToStep('checklist-verificar');
+    },
+    
+    // Confirmar y guardar desde la previsualización
+    submitFromPreview(appState) {
+        // Llamamos a handleSubmit simulando un evento de formulario
+        this.handleSubmit({ preventDefault: () => {} }, appState);
+    },
+
     // Manejar envío del formulario
     async handleSubmit(e, appState) {
         e.preventDefault();

@@ -12,9 +12,9 @@ const AdminView = {
                         <div class="form-group">
                             <label>Clave de acceso</label>
                             <input type="password" 
-                                   id="adminPassword"
-                                   placeholder="Ingresa la clave"
-                                   style="text-align: center; font-weight: bold;">
+                                    id="adminPassword"
+                                    placeholder="Ingresa la clave"
+                                    style="text-align: center; font-weight: bold;">
                         </div>
                         
                         <button onclick="AdminController.checkPassword()" class="btn btn-primary">
@@ -43,9 +43,9 @@ const AdminView = {
                         <div class="form-group">
                             <label>Clave de acceso</label>
                             <input type="password" 
-                                   id="tallerPassword"
-                                   placeholder="Ingresa la clave"
-                                   style="text-align: center; font-weight: bold;">
+                                    id="tallerPassword"
+                                    placeholder="Ingresa la clave"
+                                    style="text-align: center; font-weight: bold;">
                         </div>
                         
                         <button onclick="AdminController.checkTallerPassword()" class="btn btn-primary" style="background: #0f172a;">
@@ -67,70 +67,83 @@ const AdminView = {
     renderPanel(appState) {
         return `
             <div>
-                <div class="header" style="background: #1e40af; color: white; border-bottom: none; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <button onclick="toggleMenu()" class="btn-icon" style="color: white; font-size: 26px;">
+                <div class="header" style="background: #1e40af; color: white; border-bottom: none; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 12px 16px; width: 100%; box-sizing: border-box;">
+                    <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                        <button onclick="toggleMenu()" class="btn-icon" style="color: white; font-size: 24px; padding: 4px; width: auto; height: auto;">
                             <i class='bx bx-menu'></i>
                         </button>
-                        <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="toggleMenu()">
-                            <img src="${CONFIG.LOGO_URL}" style="height: 35px; object-fit: contain;">
-                            <div style="display: none; @media(min-width:600px){display:block;}">
-                                <div class="logo" style="color: white; font-size: 16px;">Panel Supervisor</div>
-                            </div>
+                        <div style="display: flex; align-items: center; gap: 8px; cursor: pointer; min-width: 0;" onclick="toggleMenu()">
+                            <img src="${CONFIG.LOGO_URL}" style="height: 28px; max-width: 80px; object-fit: contain;">
+                            <div class="logo" style="color: white; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Panel Sup.</div>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 8px;">
-                    <button onclick="AdminController.showExportOptions()"
-                            style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px;">
-                        📄 Exportar PDFs
-                    </button>
-                        <button onclick="AdminController.exportToCSV()"
-                                style="background: #22c55e; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px;">
-                        Exportar CSV
+                    <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                        <button onclick="AdminController.showExportOptions()"
+                                style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <i class='bx bxs-file-pdf'></i> PDF
                         </button>
                     ${appState.userRole === 'admin' ? `
                         <button onclick="AdminController.showPasswordModal()"
-                                style="background: #8b5cf6; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; cursor: pointer;">
-                            🔐 Accesos
+                                style="background: #8b5cf6; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                            <i class='bx bx-lock-alt'></i> Accesos
                         </button>
                     ` : ''}
                     </div>
                 </div>
                 
-                <div class="container">
+                <div class="container" style="padding: 16px; max-width: 800px; margin: 0 auto; box-sizing: border-box;">
                     <!-- Filtros -->
-                    <div class="card">
-                        <div class="grid-responsive">
-                            <div class="form-group">
+                    <div class="card" style="margin-bottom: 20px; box-sizing: border-box; width: 100%;">
+                        <div style="display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+                            <div class="form-group" style="margin-bottom: 0;">
                                 <label>Filtrar por mes</label>
                                 <input type="month" 
-                                       id="filterMonth"
-                                       value="${appState.filterMonth || ''}"
-                                       onchange="AdminController.updateFilterMonth(this.value)">
+                                        id="filterMonth"
+                                        value="${appState.filterMonth || ''}"
+                                        onchange="AdminController.updateFilterMonth(this.value)"
+                                        style="width: 100%; box-sizing: border-box; min-width: 0;">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" style="margin-bottom: 0;">
                                 <label>Filtrar por fecha</label>
                                 <input type="date" 
-                                       id="filterDate"
-                                       value="${appState.filterDate}"
-                                       onchange="AdminController.updateFilterDate(this.value)">
+                                        id="filterDate"
+                                        value="${appState.filterDate}"
+                                        onchange="AdminController.updateFilterDate(this.value)"
+                                        style="width: 100%; box-sizing: border-box; min-width: 0;">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" style="margin-bottom: 0;">
                                 <label>Buscar</label>
                                 <input type="text" 
-                                       id="filterSearch"
-                                       value="${appState.filterSearch}"
-                                       oninput="AdminController.updateFilterSearch(this.value)"
-                                       placeholder="Unidad, operador...">
+                                        id="filterSearch"
+                                        value="${appState.filterSearch}"
+                                        oninput="AdminController.updateFilterSearch(this.value)"
+                                        placeholder="Unidad, operador..."
+                                        style="width: 100%; box-sizing: border-box; min-width: 0;">
                             </div>
                         </div>
                         
-                        <div style="display: flex; justify-content: space-between; font-size: 12px; color: #64748b;">
-                            <div>Total: <span id="totalReports">0</span> registros</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #64748b; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e2e8f0;">
+                            <div>Total listado: <span id="totalReports">0</span></div>
                             <button onclick="AdminController.clearAllReports()" 
-                                    style="color: #dc2626; background: none; border: none; font-size: 12px;">
-                                Limpiar todo
+                                    style="color: #dc2626; background: none; border: none; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                <i class='bx bx-trash'></i> Limpiar todo
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas rápidas -->
+                    <div id="adminStatsContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px;">
+                        <div class="stat-card" style="background: #e0f2fe; padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <div class="stat-value" style="color: #0284c7; font-size: 20px; font-weight: bold;" id="adminStat1">0</div>
+                            <div class="stat-label" style="font-size: 11px; color: #0369a1; margin-top: 4px;" id="adminLabel1">Total</div>
+                        </div>
+                        <div class="stat-card" style="background: #dcfce7; padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <div class="stat-value" style="color: #16a34a; font-size: 20px; font-weight: bold;" id="adminStat2">0</div>
+                            <div class="stat-label" style="font-size: 11px; color: #15803d; margin-top: 4px;" id="adminLabel2">Aprobados</div>
+                        </div>
+                        <div class="stat-card" style="background: #fee2e2; padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <div class="stat-value" style="color: #dc2626; font-size: 20px; font-weight: bold;" id="adminStat3">0</div>
+                            <div class="stat-label" style="font-size: 11px; color: #b91c1c; margin-top: 4px;" id="adminLabel3">Rechazados</div>
                         </div>
                     </div>
                     
@@ -162,14 +175,14 @@ const AdminView = {
                             return `
                                 <button id="btnSubFilter-${tipo}" onclick="AdminController.updateFilterTipoRuta('${tipo}')"
                                         style="white-space: nowrap; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-                                               border: 1px solid ${isActive ? '#1e40af' : '#cbd5e1'};
-                                               background: ${isActive ? '#eff6ff' : '#f8fafc'};
-                                               color: ${isActive ? '#1e40af' : '#475569'};">
+                                                border: 1px solid ${isActive ? '#1e40af' : '#cbd5e1'};
+                                                background: ${isActive ? '#eff6ff' : '#f8fafc'};
+                                                color: ${isActive ? '#1e40af' : '#475569'};">
                                     ${tipo === 'Todos' ? '📋 Todos' : 
-                                      tipo === 'Utilitario' ? '🚗 Utilitario' :
-                                      tipo === 'Mantenimiento' ? '🔧 Mantenimiento' :
-                                      tipo === 'Montacargas' ? '📦 Montacargas' :
-                                      tipo === 'Cilindros' ? '🛢️ Cilindros' : '🚛 Autotanque'}
+                                        tipo === 'Utilitario' ? '🚗 Utilitario' :
+                                        tipo === 'Mantenimiento' ? '🔧 Mantenimiento' :
+                                        tipo === 'Montacargas' ? '📦 Montacargas' :
+                                        tipo === 'Cilindros' ? '🛢️ Cilindros' : '🚛 Autotanque'}
                                 </button>
                             `;
                         }).join('')}
@@ -180,8 +193,8 @@ const AdminView = {
                         <div class="card" style="margin-bottom: 16px;">
                             <h4 id="chartTitle" style="margin-bottom: 10px; color: #1e293b; font-size: 14px;">
                                 ${appState.activeTab === 'checklists' ? '📊 Estado de Inspecciones' : 
-                                  appState.activeTab === 'ordenes' ? '📊 Estado de Órdenes' : 
-                                  '📊 Supervisiones en Campo'}
+                                    appState.activeTab === 'ordenes' ? '📊 Estado de Órdenes' : 
+                                    '📊 Supervisiones en Campo'}
                             </h4>
                             <div style="height: 200px; position: relative;"><canvas id="statsChart"></canvas></div>
                         </div>
@@ -231,10 +244,10 @@ const AdminView = {
                             <div class="form-group" style="flex: 1; margin-bottom: 0;">
                                 <label>Buscar por unidad o folio</label>
                                 <input type="text" 
-                                       id="filterSearch"
-                                       value="${appState.filterSearch}"
-                                       oninput="AdminController.updateTallerFilter(this.value)"
-                                       placeholder="Ej: GU-1260 o FOLIO-123">
+                                        id="filterSearch"
+                                        value="${appState.filterSearch}"
+                                        oninput="AdminController.updateTallerFilter(this.value)"
+                                        placeholder="Ej: GU-1260 o FOLIO-123">
                             </div>
                             <button onclick="AdminController.loadTallerPanel()" 
                                     class="btn btn-primary" 
@@ -530,7 +543,7 @@ const AdminView = {
                                 <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                                     ${CONFIG.TIPOS_MANTENIMIENTO.map(tipo => {
                                         const value = tipo.toLowerCase().includes('correctivo') ? 'correctivo' : 
-                                                     tipo.toLowerCase().includes('preventivo') ? 'preventivo' : 'otras';
+                                                        tipo.toLowerCase().includes('preventivo') ? 'preventivo' : 'otras';
                                         const checked = orden.tipoMantenimiento === value;
                                         return `<div style="display: flex; align-items: center; gap: 5px;">
                                             <div style="border: 1px solid #000; width: 12px; height: 8px; display: inline-block; ${checked ? 'background-color: #000;' : ''}"></div> ${tipo}
@@ -709,13 +722,13 @@ const AdminView = {
                             <div style="font-weight: bold; margin-top: 4px;">
                                 Folio: ${orden.folio || 'N/A'}
                                 <span style="font-size: 10px; padding: 2px 6px; border-radius: 10px; 
-                                      background: ${orden.estado === 'pendiente' ? '#fef3c7' : 
-                                                   orden.estado === 'en_proceso' ? '#dbeafe' : '#dcfce7'}; 
-                                      color: ${orden.estado === 'pendiente' ? '#92400e' : 
-                                              orden.estado === 'en_proceso' ? '#1e40af' : '#166534'}; 
-                                      margin-left: 8px;">
+                                        background: ${orden.estado === 'pendiente' ? '#fef3c7' : 
+                                                    orden.estado === 'en_proceso' ? '#dbeafe' : '#dcfce7'}; 
+                                        color: ${orden.estado === 'pendiente' ? '#92400e' : 
+                                                orden.estado === 'en_proceso' ? '#1e40af' : '#166534'}; 
+                                        margin-left: 8px;">
                                     ${orden.estado === 'pendiente' ? 'PENDIENTE' : 
-                                      orden.estado === 'en_proceso' ? 'EN PROCESO' : 'COMPLETADO'}
+                                    orden.estado === 'en_proceso' ? 'EN PROCESO' : 'COMPLETADO'}
                                 </span>
                             </div>
                         </div>
@@ -776,8 +789,8 @@ const AdminView = {
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
                         <div style="font-size: 11px; color: #64748b; display: flex; gap: 10px;">
                             ${supervision.evidenciasFotos ? 
-                              `📸 ${supervision.evidenciasFotos.length} foto(s)` : 
-                              supervision.evidenciaFoto ? '📸 1 foto' : '📸 Sin fotos'}
+                                `📸 ${supervision.evidenciasFotos.length} foto(s)` : 
+                                supervision.evidenciaFoto ? '📸 1 foto' : '📸 Sin fotos'}
                             ${supervision.coordenadas ? ' | 🗺️ Geo' : ''}
                         </div>
                         <button onclick="AdminController.viewSupervision('${supervision.id}')"

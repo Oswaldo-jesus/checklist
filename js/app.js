@@ -149,6 +149,9 @@ const App = {
             case 'form':
                 app.innerHTML = FormView.render(this.appState);
                 break;
+            case 'checklist-verificar':
+                app.innerHTML = ChecklistVerificarView.render(this.appState);
+                break;
             case 'orden-servicio':
                 app.innerHTML = OrdenServicioView.render(this.appState);
                 break;
