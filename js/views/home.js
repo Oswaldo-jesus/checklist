@@ -6,13 +6,12 @@ const HomeView = {
             <div>
                 <!-- Header Moderno con Logo y Menú -->
                 <div class="header" style="background: #1e40af; color: white; border-bottom: none; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <button onclick="toggleMenu()" class="btn-icon" style="color: white; font-size: 26px;">
+                    <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
+                        <button onclick="toggleMenu()" class="btn-icon" style="color: white; font-size: 28px; width: auto; height: auto; display: flex; align-items: center; justify-content: center; padding: 4px;">
                             <i class='bx bx-menu'></i>
                         </button>
-                        <img src="${CONFIG.LOGO_URL}" onclick="toggleMenu()" style="height: 35px; cursor: pointer; object-fit: contain;" alt="Logo">
+                        <img src="${CONFIG.LOGO_URL}" onclick="toggleMenu()" style="height: 32px; max-width: 200px; cursor: pointer; object-fit: contain;" alt="Logo">
                     </div>
-                    <div style="font-weight: bold; font-size: 14px; color: white;">Inicio</div>
                 </div>
 
                 <div class="container" style="margin-top: 15px;">
