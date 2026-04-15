@@ -98,39 +98,42 @@ const OrdenServicioView = {
                             <div class="form-group">
                                 <label>Lugar del Mantenimiento</label>
                                 <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 8px;">
-                                    <label style="display: flex; align-items: center; gap: 5px;">
+                                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                                         <input type="radio" 
                                                name="mantenimientoLugar" 
                                                value="taller" 
                                                ${appState.ordenData.mantenimientoLugar === 'taller' ? 'checked' : ''}
-                                               onchange="OrdenController.updateOrdenData('mantenimientoLugar', this.value, App.appState)">
-                                        Taller
+                                               onchange="OrdenController.updateOrdenData('mantenimientoLugar', this.value, App.appState)"
+                                               style="width: 18px; height: 18px; margin: 0; flex-shrink: 0; cursor: pointer;">
+                                        <span style="color: #334155;">Taller</span>
                                     </label>
-                                    <label style="display: flex; align-items: center; gap: 5px;">
+                                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                                         <input type="radio" 
                                                name="mantenimientoLugar" 
                                                value="ruta" 
                                                ${appState.ordenData.mantenimientoLugar === 'ruta' ? 'checked' : ''}
-                                               onchange="OrdenController.updateOrdenData('mantenimientoLugar', this.value, App.appState)">
-                                        Ruta
+                                               onchange="OrdenController.updateOrdenData('mantenimientoLugar', this.value, App.appState)"
+                                               style="width: 18px; height: 18px; margin: 0; flex-shrink: 0; cursor: pointer;">
+                                        <span style="color: #334155;">Ruta</span>
                                     </label>
                                 </div>
                             </div>
                             
                             <div class="form-group">
                                 <label>Tipo de Mantenimiento</label>
-                                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 8px;">
+                                <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 8px;">
                                     ${CONFIG.TIPOS_MANTENIMIENTO.map(tipo => {
                                         const value = tipo.toLowerCase().includes('correctivo') ? 'correctivo' : 
                                                      tipo.toLowerCase().includes('preventivo') ? 'preventivo' : 'otras';
                                         return `
-                                            <label style="display: flex; align-items: center; gap: 5px;">
+                                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                                                 <input type="radio" 
                                                        name="tipoMantenimiento" 
                                                        value="${value}"
                                                        ${appState.ordenData.tipoMantenimiento === value ? 'checked' : ''}
-                                                       onchange="OrdenController.updateOrdenData('tipoMantenimiento', this.value, App.appState)">
-                                                ${tipo}
+                                                       onchange="OrdenController.updateOrdenData('tipoMantenimiento', this.value, App.appState)"
+                                                       style="width: 18px; height: 18px; margin: 0; flex-shrink: 0; cursor: pointer;">
+                                                <span style="color: #334155;">${tipo}</span>
                                             </label>
                                         `;
                                     }).join('')}

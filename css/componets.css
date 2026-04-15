@@ -78,6 +78,12 @@ input, select, textarea {
     background: #f8fafc;
     transition: all 0.2s ease;
 }
+input[type="radio"], input[type="checkbox"] {
+    width: auto;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
 input:focus, select:focus, textarea:focus {
     outline: none;
     border-color: #3b82f6;
