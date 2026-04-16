@@ -65,6 +65,13 @@ const AdminView = {
     
     // Vista del panel SUPERVISOR
     renderPanel(appState) {
+        const d = new Date();
+        const cMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const cDate = `${cMonth}-${String(d.getDate()).padStart(2, '0')}`;
+        
+        const mBase = appState.filterMonth === cMonth && !appState.filterDate;
+        const tBase = appState.filterDate === cDate;
+
         return `
             <div>
                 <div class="header" style="background: #1e40af; color: white; border-bottom: none; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 12px 16px; width: 100%; box-sizing: border-box;">
@@ -124,26 +131,56 @@ const AdminView = {
                         
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #64748b; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e2e8f0;">
                             <div>Total listado: <span id="totalReports">0</span></div>
-                            <button onclick="AdminController.clearAllReports()" 
-                                    style="color: #dc2626; background: none; border: none; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                                <i class='bx bx-trash'></i> Limpiar todo
-                            </button>
+                            <div style="display: flex; gap: 12px;">
+                                <button onclick="AdminController.resetFilters()" 
+                                        style="color: #0284c7; background: none; border: none; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <i class='bx bx-filter-alt'></i> Quitar filtros
+                                </button>
+                                <button onclick="AdminController.clearAllReports()" 
+                                        style="color: #dc2626; background: none; border: none; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <i class='bx bx-trash'></i> Eliminar todo
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Estadísticas rápidas -->
-                    <div id="adminStatsContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px;">
-                        <div class="stat-card" style="background: #e0f2fe; padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                            <div class="stat-value" style="color: #0284c7; font-size: 20px; font-weight: bold;" id="adminStat1">0</div>
-                            <div class="stat-label" style="font-size: 11px; color: #0369a1; margin-top: 4px;" id="adminLabel1">Total</div>
+                    <div id="adminGlobalStats" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 24px;">
+                        <!-- Tarjeta del Mes -->
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-size: 11px; font-weight: 700; color: #475569; text-align: center; margin-bottom: 10px; letter-spacing: 0.5px;">📅 TODO EL MES</div>
+                            <div style="display: flex; justify-content: space-between; text-align: center;">
+                                <div onclick="AdminController.applyQuickFilter('month', 'all')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${mBase && (!appState.filterStatus || appState.filterStatus === 'all') ? '#38bdf8' : 'transparent'}; background: ${mBase && (!appState.filterStatus || appState.filterStatus === 'all') ? '#bae6fd' : 'transparent'}; transition: all 0.2s;">
+                                    <div id="statMonthTotal" style="font-size: 18px; font-weight: bold; color: #0284c7;">0</div>
+                                    <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Total</div>
+                                </div>
+                                <div onclick="AdminController.applyQuickFilter('month', 'approved')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${mBase && appState.filterStatus === 'approved' ? '#4ade80' : 'transparent'}; background: ${mBase && appState.filterStatus === 'approved' ? '#bbf7d0' : 'transparent'}; transition: all 0.2s;">
+                                    <div id="statMonthApp" style="font-size: 18px; font-weight: bold; color: #16a34a;">0</div>
+                                    <div id="lblMonthApp" style="font-size: 10px; color: #15803d; margin-top: 2px;">Aprobados</div>
+                                </div>
+                                <div onclick="AdminController.applyQuickFilter('month', 'rejected')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${mBase && appState.filterStatus === 'rejected' ? '#f87171' : 'transparent'}; background: ${mBase && appState.filterStatus === 'rejected' ? '#fecaca' : 'transparent'}; transition: all 0.2s;">
+                                    <div id="statMonthRej" style="font-size: 18px; font-weight: bold; color: #dc2626;">0</div>
+                                    <div id="lblMonthRej" style="font-size: 10px; color: #b91c1c; margin-top: 2px;">Fallas</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-card" style="background: #dcfce7; padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                            <div class="stat-value" style="color: #16a34a; font-size: 20px; font-weight: bold;" id="adminStat2">0</div>
-                            <div class="stat-label" style="font-size: 11px; color: #15803d; margin-top: 4px;" id="adminLabel2">Aprobados</div>
-                        </div>
-                        <div class="stat-card" style="background: #fee2e2; padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                            <div class="stat-value" style="color: #dc2626; font-size: 20px; font-weight: bold;" id="adminStat3">0</div>
-                            <div class="stat-label" style="font-size: 11px; color: #b91c1c; margin-top: 4px;" id="adminLabel3">Rechazados</div>
+                        <!-- Tarjeta de Hoy -->
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-size: 11px; font-weight: 700; color: #475569; text-align: center; margin-bottom: 10px; letter-spacing: 0.5px;">☀️ SOLO HOY</div>
+                            <div style="display: flex; justify-content: space-between; text-align: center;">
+                                <div onclick="AdminController.applyQuickFilter('today', 'all')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${tBase && (!appState.filterStatus || appState.filterStatus === 'all') ? '#38bdf8' : 'transparent'}; background: ${tBase && (!appState.filterStatus || appState.filterStatus === 'all') ? '#bae6fd' : 'transparent'}; transition: all 0.2s;">
+                                    <div id="statTodayTotal" style="font-size: 18px; font-weight: bold; color: #0284c7;">0</div>
+                                    <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Total</div>
+                                </div>
+                                <div onclick="AdminController.applyQuickFilter('today', 'approved')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${tBase && appState.filterStatus === 'approved' ? '#4ade80' : 'transparent'}; background: ${tBase && appState.filterStatus === 'approved' ? '#bbf7d0' : 'transparent'}; transition: all 0.2s;">
+                                    <div id="statTodayApp" style="font-size: 18px; font-weight: bold; color: #16a34a;">0</div>
+                                    <div id="lblTodayApp" style="font-size: 10px; color: #15803d; margin-top: 2px;">Aprobados</div>
+                                </div>
+                                <div onclick="AdminController.applyQuickFilter('today', 'rejected')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${tBase && appState.filterStatus === 'rejected' ? '#f87171' : 'transparent'}; background: ${tBase && appState.filterStatus === 'rejected' ? '#fecaca' : 'transparent'}; transition: all 0.2s;">
+                                    <div id="statTodayRej" style="font-size: 18px; font-weight: bold; color: #dc2626;">0</div>
+                                    <div id="lblTodayRej" style="font-size: 10px; color: #b91c1c; margin-top: 2px;">Fallas</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -211,6 +248,13 @@ const AdminView = {
     
     // Vista del panel TALLER
     renderTallerPanel(appState) {
+        const d = new Date();
+        const cMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const cDate = `${cMonth}-${String(d.getDate()).padStart(2, '0')}`;
+        
+        const mBase = appState.filterTallerMonth === cMonth && !appState.filterTallerDate;
+        const tBase = appState.filterTallerDate === cDate;
+
         return `
             <div>
                 <div class="header" style="background: #1e40af; color: white; border-bottom: none; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -249,7 +293,12 @@ const AdminView = {
                                         oninput="AdminController.updateTallerFilter(this.value)"
                                         placeholder="Ej: GU-1260 o FOLIO-123">
                             </div>
-                            <button onclick="AdminController.loadTallerPanel()" 
+                            <button onclick="AdminController.resetTallerFilters()" 
+                                    class="btn btn-secondary" 
+                                    style="width: auto; padding: 10px 20px; margin: 0;">
+                                Limpiar
+                            </button>
+                            <button onclick="AdminController.loadTallerPanel()"
                                     class="btn btn-primary" 
                                     style="width: auto; padding: 10px 20px; margin: 0;">
                                 Buscar
@@ -258,18 +307,50 @@ const AdminView = {
                     </div>
                     
                     <!-- Estadísticas rápidas -->
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0;">
-                        <div class="stat-card" style="background: #fee2e2;">
-                            <div class="stat-value" style="color: #dc2626;" id="pendientesCount">0</div>
-                            <div class="stat-label">Pendientes</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
+                        <!-- Tarjeta del Mes -->
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-size: 11px; font-weight: 700; color: #475569; text-align: center; margin-bottom: 10px; letter-spacing: 0.5px;">📅 TODO EL MES</div>
+                            <div style="display: flex; justify-content: space-between; text-align: center; gap: 4px;">
+                                <div onclick="AdminController.applyTallerQuickFilter('month', 'all')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${mBase && (!appState.filterTallerStatus || appState.filterTallerStatus === 'all') ? '#38bdf8' : 'transparent'}; background: ${mBase && (!appState.filterTallerStatus || appState.filterTallerStatus === 'all') ? '#bae6fd' : 'transparent'}; flex: 1; transition: all 0.2s;">
+                                    <div id="tMonthTotal" style="font-size: 16px; font-weight: bold; color: #0284c7;">0</div>
+                                    <div style="font-size: 9px; color: #64748b; margin-top: 2px;">Total</div>
+                                </div>
+                                <div onclick="AdminController.applyTallerQuickFilter('month', 'pendiente')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${mBase && appState.filterTallerStatus === 'pendiente' ? '#f87171' : 'transparent'}; background: ${mBase && appState.filterTallerStatus === 'pendiente' ? '#fecaca' : 'transparent'}; flex: 1; transition: all 0.2s;">
+                                    <div id="tMonthPend" style="font-size: 16px; font-weight: bold; color: #dc2626;">0</div>
+                                    <div style="font-size: 9px; color: #b91c1c; margin-top: 2px;">Pend.</div>
+                                </div>
+                                <div onclick="AdminController.applyTallerQuickFilter('month', 'en_proceso')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${mBase && appState.filterTallerStatus === 'en_proceso' ? '#6366f1' : 'transparent'}; background: ${mBase && appState.filterTallerStatus === 'en_proceso' ? '#c7d2fe' : 'transparent'}; flex: 1; transition: all 0.2s;">
+                                    <div id="tMonthProc" style="font-size: 16px; font-weight: bold; color: #4338ca;">0</div>
+                                    <div style="font-size: 9px; color: #3730a3; margin-top: 2px;">Proc.</div>
+                                </div>
+                                <div onclick="AdminController.applyTallerQuickFilter('month', 'completado')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${mBase && appState.filterTallerStatus === 'completado' ? '#4ade80' : 'transparent'}; background: ${mBase && appState.filterTallerStatus === 'completado' ? '#bbf7d0' : 'transparent'}; flex: 1; transition: all 0.2s;">
+                                    <div id="tMonthComp" style="font-size: 16px; font-weight: bold; color: #16a34a;">0</div>
+                                    <div style="font-size: 9px; color: #15803d; margin-top: 2px;">Comp.</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-card" style="background: #dbeafe;">
-                            <div class="stat-value" style="color: #2563eb;" id="procesoCount">0</div>
-                            <div class="stat-label">En Proceso</div>
-                        </div>
-                        <div class="stat-card" style="background: #dcfce7;">
-                            <div class="stat-value" style="color: #16a34a;" id="completadasCount">0</div>
-                            <div class="stat-label">Completadas</div>
+                        <!-- Tarjeta de Hoy -->
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-size: 11px; font-weight: 700; color: #475569; text-align: center; margin-bottom: 10px; letter-spacing: 0.5px;">☀️ SOLO HOY</div>
+                            <div style="display: flex; justify-content: space-between; text-align: center; gap: 4px;">
+                                <div onclick="AdminController.applyTallerQuickFilter('today', 'all')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${tBase && (!appState.filterTallerStatus || appState.filterTallerStatus === 'all') ? '#38bdf8' : 'transparent'}; background: ${tBase && (!appState.filterTallerStatus || appState.filterTallerStatus === 'all') ? '#bae6fd' : 'transparent'}; flex: 1; transition: all 0.2s;">
+                                    <div id="tTodayTotal" style="font-size: 16px; font-weight: bold; color: #0284c7;">0</div>
+                                    <div style="font-size: 9px; color: #64748b; margin-top: 2px;">Total</div>
+                                </div>
+                                <div onclick="AdminController.applyTallerQuickFilter('today', 'pendiente')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${tBase && appState.filterTallerStatus === 'pendiente' ? '#f87171' : 'transparent'}; background: ${tBase && appState.filterTallerStatus === 'pendiente' ? '#fecaca' : 'transparent'}; flex: 1; transition: all 0.2s;">
+                                    <div id="tTodayPend" style="font-size: 16px; font-weight: bold; color: #dc2626;">0</div>
+                                    <div style="font-size: 9px; color: #b91c1c; margin-top: 2px;">Pend.</div>
+                                </div>
+                                <div onclick="AdminController.applyTallerQuickFilter('today', 'en_proceso')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${tBase && appState.filterTallerStatus === 'en_proceso' ? '#6366f1' : 'transparent'}; background: ${tBase && appState.filterTallerStatus === 'en_proceso' ? '#c7d2fe' : 'transparent'}; flex: 1; transition: all 0.2s;">
+                                    <div id="tTodayProc" style="font-size: 16px; font-weight: bold; color: #4338ca;">0</div>
+                                    <div style="font-size: 9px; color: #3730a3; margin-top: 2px;">Proc.</div>
+                                </div>
+                                <div onclick="AdminController.applyTallerQuickFilter('today', 'completado')" style="cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid ${tBase && appState.filterTallerStatus === 'completado' ? '#4ade80' : 'transparent'}; background: ${tBase && appState.filterTallerStatus === 'completado' ? '#bbf7d0' : 'transparent'}; flex: 1; transition: all 0.2s;">
+                                    <div id="tTodayComp" style="font-size: 16px; font-weight: bold; color: #16a34a;">0</div>
+                                    <div style="font-size: 9px; color: #15803d; margin-top: 2px;">Comp.</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -389,7 +470,7 @@ const AdminView = {
 
                     <!-- Unidad info -->
                     <div style="margin-bottom: 16px; font-size: 14px; font-weight: bold; border: 1px solid #000; padding: 8px; background-color: #f9fafb; text-transform: uppercase;">
-                        ${tipoRuta === 'Autotanque' ? 'AUTOTANQUE' : 'VEHÍCULO DE REPARTO'}
+                        ${tipoRuta === 'Autotanque' ? 'AUTOTANQUE' : tipoRuta === 'Utilitario' ? 'VEHÍCULO UTILITARIO' : 'VEHÍCULO DE REPARTO'}
                     </div>
                     
                     <!-- Datos Generales -->

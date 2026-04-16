@@ -14,6 +14,7 @@ const App = {
         filterDate: '',
         filterSearch: '',
         filterTipoRuta: 'Todos',
+        filterTallerStatus: 'all',
         activeTab: 'checklists',
         formData: { operador: '', eco: '', km: '', ruta: '', observaciones: '' },
         ordenData: { 

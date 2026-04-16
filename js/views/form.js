@@ -27,7 +27,7 @@ const FormView = {
                 </div>
                 
                 <div class="container" style="max-width: 800px; margin: 0 auto; padding: 24px 16px;">
-                    <form id="checklistForm" onsubmit="FormController.handleSubmit(event, App.appState)">
+                    <form id="checklistForm" onsubmit="event.preventDefault(); FormController.previewChecklist(App.appState)">
                         <!-- Información básica -->
                         <div class="card card-hover" style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05); margin-bottom: 24px; border: 1px solid #f1f5f9;">
                             <h3 style="margin-bottom: 20px; color: #0f172a; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
@@ -253,10 +253,10 @@ const FormView = {
                             <!-- Botón enviar -->
                             <div style="padding: 20px;">
                                 <button type="submit" 
-                                        class="btn btn-primary"
+                                        class="btn btn-warning"
                                         ${appState.isSubmitting ? 'disabled' : ''}
                                         style="font-size: 18px;">
-                                    ${appState.isSubmitting ? 'Enviando...' : '✅ Finalizar e Imprimir'}
+                                    ${appState.isSubmitting ? 'Enviando...' : '👁️ Previsualizar Checklist'}
                                 </button>
                             </div>
                         ` : ''}

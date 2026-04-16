@@ -603,6 +603,23 @@ const INSPECTION_POINTS_AUTOTANQUE = [
     { id: "at_letreros", label: "Letreros, señales y avisos (Claros, legibles y no obstruidos)", critical: true }
 ];
 
+// PUNTOS DE INSPECCIÓN EXCLUSIVOS PARA UTILITARIOS
+const INSPECTION_POINTS_UTILITARIO = [
+    { id: "head_utilitario", label: "REVISIÓN DE VEHÍCULO UTILITARIO", isHeader: true },
+    { id: "util_limp_ext", label: "Limpieza exterior (Limpio y sin daños)", critical: false },
+    { id: "util_limp_int", label: "Limpieza interior (Limpio y ordenado)", critical: false },
+    { id: "util_llantas", label: "Estado de llantas (Presión y desgaste correcto)", critical: true },
+    { id: "util_luces", label: "Luces en general (Funcionando correctamente)", critical: true },
+    { id: "util_espejos", label: "Espejos completos (Sujetos y sin daños)", critical: true },
+    { id: "util_claxon", label: "Claxon (Funcionando)", critical: true },
+    { id: "util_frenos", label: "Frenos (Funcionando correctamente)", critical: true },
+    { id: "util_suspension", label: "Suspensión (Sin ruidos anormales)", critical: false },
+    { id: "util_aceite", label: "Nivel de aceite (Nivel óptimo)", critical: true },
+    { id: "util_agua", label: "Nivel de agua (Nivel óptimo)", critical: true },
+    { id: "util_bandas", label: "Bandas (Buen estado y tensión adecuada)", critical: true },
+    { id: "util_documentos", label: "Documentación completa (A bordo y vigente)", critical: true }
+];
+
 
 // Tipos de mantenimiento
 const TIPOS_MANTENIMIENTO = [
@@ -636,8 +653,10 @@ const SUPABASE_CONFIG = {
 function getInspectionPointsByRouteType(routeType) {
     if (routeType === "Autotanque") {
         return INSPECTION_POINTS_AUTOTANQUE;
+    } else if (routeType === "Utilitario") {
+        return INSPECTION_POINTS_UTILITARIO;
     } else {
-        // Para Utilitario, Mantenimiento, Montacargas, Cilindros y cualquier otro
+        // Para Mantenimiento, Montacargas, Cilindros y cualquier otro
         return INSPECTION_POINTS_NORMAL;
     }
 }
@@ -659,6 +678,7 @@ if (typeof window !== 'undefined') {
         PUNTOS_CRITICOS,
         INSPECTION_POINTS_NORMAL,
         INSPECTION_POINTS_AUTOTANQUE,
+        INSPECTION_POINTS_UTILITARIO,
         getInspectionPointsByRouteType,
         getRoutesByType,
         LOGO_URL,

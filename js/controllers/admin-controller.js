@@ -27,11 +27,8 @@ const AdminController = {
     // Cambiar pestaña
     switchTab(tab) {
         App.appState.activeTab = tab;
+        App.appState.filterStatus = 'all'; // Limpiar el filtro de tarjetas al cambiar de pestaña
         this.updateTabStyles(tab);
-        
-        const subTabs = document.getElementById('subTabsChecklists');
-        if (subTabs) subTabs.style.display = tab === 'checklists' ? 'flex' : 'none';
-        
         if (tab === 'mapas') {
             const c = document.getElementById('reportsList');
             if (c) { c.innerHTML = MapaQuejasView.render(); setTimeout(() => MapaQuejasView.initMapa?.(), 200); }
@@ -54,30 +51,77 @@ const AdminController = {
         if (App.appState.activeTab !== 'mapas') this.loadReportsIntoPanel(); 
     },
     
+    updateFilterTipoRuta(tipo) {
+        App.appState.filterTipoRuta = tipo;
+        App.render(); // Re-renderiza para actualizar tanto los estilos del botón activo como los datos
+    },
+    
+    updateFilterStatus(status) {
+        App.appState.filterStatus = status;
+        App.render(); // Re-renderiza para actualizar el color de las tarjetas y filtrar la lista
+    },
+    
+    applyQuickFilter(period, status) {
+        const hoy = new Date();
+        const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dia = String(hoy.getDate()).padStart(2, '0');
+        const anio = hoy.getFullYear();
+
+        if (period === 'month') {
+            App.appState.filterMonth = `${anio}-${mes}`;
+            App.appState.filterDate = '';
+        } else if (period === 'today') {
+            App.appState.filterDate = `${anio}-${mes}-${dia}`;
+            App.appState.filterMonth = '';
+        }
+        
+        App.appState.filterStatus = status;
+        App.render(); 
+    },
+
+    resetFilters() {
+        App.appState.filterMonth = '';
+        App.appState.filterDate = '';
+        App.appState.filterSearch = '';
+        App.appState.filterStatus = 'all';
+        App.appState.filterTipoRuta = 'Todos';
+        App.render();
+    },
+
+    applyTallerQuickFilter(period, status) {
+        const hoy = new Date();
+        const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dia = String(hoy.getDate()).padStart(2, '0');
+        const anio = hoy.getFullYear();
+
+        if (period === 'month') {
+            App.appState.filterTallerMonth = `${anio}-${mes}`;
+            App.appState.filterTallerDate = '';
+        } else if (period === 'today') {
+            App.appState.filterTallerDate = `${anio}-${mes}-${dia}`;
+            App.appState.filterTallerMonth = '';
+        }
+        
+        App.appState.filterTallerStatus = status;
+        App.render(); 
+    },
+
+    resetTallerFilters() {
+        App.appState.filterSearch = '';
+        App.appState.filterTallerStatus = 'all';
+        App.appState.filterTallerMonth = '';
+        App.appState.filterTallerDate = '';
+        App.render();
+    },
+
+    applyTallerStatusFilter(status) {
+        App.appState.filterTallerStatus = status;
+        App.render();
+    },
+
     updateTallerFilter(s) { 
         App.appState.filterSearch = s; 
         this.loadTallerPanel(); 
-    },
-
-    // Filtro por Tipo de Ruta (Sub-pestañas)
-    updateFilterTipoRuta(tipo) {
-        App.appState.filterTipoRuta = tipo;
-        // Actualizar estilos de los botones
-        ['Todos', 'Utilitario', 'Mantenimiento', 'Montacargas', 'Cilindros', 'Autotanque'].forEach(t => {
-            const btn = document.getElementById(`btnSubFilter-${t}`);
-            if (btn) {
-                if (t === tipo) {
-                    btn.style.border = '1px solid #1e40af';
-                    btn.style.background = '#eff6ff';
-                    btn.style.color = '#1e40af';
-                } else {
-                    btn.style.border = '1px solid #cbd5e1';
-                    btn.style.background = '#f8fafc';
-                    btn.style.color = '#475569';
-                }
-            }
-        });
-        this.loadReportsIntoPanel();
     },
 
     // Estilos de pestañas
@@ -116,6 +160,64 @@ const AdminController = {
             let items = App.appState.activeTab === 'checklists' ? await StorageService.loadReports() :
                         App.appState.activeTab === 'ordenes' ? await StorageService.loadOrdenes() :
                         JSON.parse(localStorage.getItem('supervisiones') || '[]');
+                        
+            // ---- NUEVA LÓGICA: CÁLCULO ESTÁTICO DE MES Y HOY ----
+            const hoy = new Date();
+            const mesActual = hoy.getMonth() + 1;
+            const anioActual = hoy.getFullYear();
+            const diaActual = hoy.getDate();
+            
+            let itemsMes = [];
+            let itemsHoy = [];
+            
+            // Recorrer todos los elementos puros de la base de datos para dividirlos por fecha
+            items.forEach(i => {
+                let y, m, d;
+                if (i.timestamp) {
+                    const date = new Date(i.timestamp);
+                    y = date.getFullYear(); m = date.getMonth() + 1; d = date.getDate();
+                } else if (i.fecha) {
+                    if (i.fecha.includes('/')) {
+                        const parts = i.fecha.split('/').map(Number);
+                        d = parts[0]; m = parts[1]; y = parts[2];
+                    } else if (i.fecha.includes('-')) {
+                        const parts = i.fecha.split('-').map(Number);
+                        y = parts[0]; m = parts[1]; d = parts[2];
+                    }
+                }
+                if (y === anioActual && m === mesActual) {
+                    itemsMes.push(i);
+                    if (d === diaActual) itemsHoy.push(i);
+                }
+            });
+            
+            // Inyectar resultados en la vista
+            const smTotal = document.getElementById('statMonthTotal'); const smApp = document.getElementById('statMonthApp'); const smRej = document.getElementById('statMonthRej');
+            const lmApp = document.getElementById('lblMonthApp'); const lmRej = document.getElementById('lblMonthRej');
+            const stTotal = document.getElementById('statTodayTotal'); const stApp = document.getElementById('statTodayApp'); const stRej = document.getElementById('statTodayRej');
+            const ltApp = document.getElementById('lblTodayApp'); const ltRej = document.getElementById('lblTodayRej');
+
+            if (smTotal && stTotal) {
+                smTotal.textContent = itemsMes.length;
+                stTotal.textContent = itemsHoy.length;
+                
+                if (App.appState.activeTab === 'checklists') {
+                    if(lmApp) { lmApp.textContent = 'Aprobados'; lmRej.textContent = 'Fallas'; }
+                    if(ltApp) { ltApp.textContent = 'Aprobados'; ltRej.textContent = 'Fallas'; }
+                    if(smApp) smApp.textContent = itemsMes.filter(r => !Object.values(r.evaluaciones || {}).includes('rechazado')).length;
+                    if(smRej) smRej.textContent = itemsMes.filter(r => Object.values(r.evaluaciones || {}).includes('rechazado')).length;
+                    if(stApp) stApp.textContent = itemsHoy.filter(r => !Object.values(r.evaluaciones || {}).includes('rechazado')).length;
+                    if(stRej) stRej.textContent = itemsHoy.filter(r => Object.values(r.evaluaciones || {}).includes('rechazado')).length;
+                } else if (App.appState.activeTab === 'ordenes') {
+                    if(lmApp) { lmApp.textContent = 'Completadas'; lmRej.textContent = 'Proceso'; }
+                    if(ltApp) { ltApp.textContent = 'Completadas'; ltRej.textContent = 'Proceso'; }
+                    if(smApp) smApp.textContent = itemsMes.filter(o => o.estado === 'completado' || o.estado === 'terminado').length;
+                    if(smRej) smRej.textContent = itemsMes.filter(o => o.estado === 'pendiente' || o.estado === 'en_proceso').length;
+                    if(stApp) stApp.textContent = itemsHoy.filter(o => o.estado === 'completado' || o.estado === 'terminado').length;
+                    if(stRej) stRej.textContent = itemsHoy.filter(o => o.estado === 'pendiente' || o.estado === 'en_proceso').length;
+                }
+            }
+            // ---- FIN NUEVA LÓGICA ----
             
             let filtered = items.filter(i => {
                 let itemYear, itemMonth, itemDay;
@@ -150,11 +252,6 @@ const AdminController = {
                 }
                 return true;
             }).filter(i => {
-                // Filtro por Tipo de Ruta (solo Inspecciones)
-                if (App.appState.activeTab === 'checklists' && App.appState.filterTipoRuta && App.appState.filterTipoRuta !== 'Todos') {
-                    if (i.tipoRuta !== App.appState.filterTipoRuta) return false;
-                }
-
                 // Filtro de búsqueda por texto (sin cambios)
                 if (!App.appState.filterSearch) return true;
                 const s = App.appState.filterSearch.toLowerCase();
@@ -174,10 +271,35 @@ const AdminController = {
                             i.descripcionFalla?.toLowerCase().includes(s) || 
                             i.folio?.toString().includes(s));
                 }
+            }).filter(i => {
+                // Filtro por tipo de ruta/unidad (Inspecciones)
+                if (App.appState.activeTab === 'checklists' && App.appState.filterTipoRuta && App.appState.filterTipoRuta !== 'Todos') {
+                    return (i.tipoRuta || 'Utilitario') === App.appState.filterTipoRuta;
+                }
+                return true;
             });
             
-            if (t) t.textContent = filtered.length;
-            if (c) c.innerHTML = AdminView.renderReportsList(filtered, App.appState.activeTab);
+
+            // Aplicar Filtro de Status (Click en Tarjetas)
+            let finalFiltered = filtered;
+            if (App.appState.filterStatus && App.appState.filterStatus !== 'all') {
+                finalFiltered = filtered.filter(i => {
+                    if (App.appState.activeTab === 'checklists') {
+                        const hasFallas = Object.values(i.evaluaciones || {}).includes('rechazado');
+                        return App.appState.filterStatus === 'approved' ? !hasFallas : hasFallas;
+                    } else if (App.appState.activeTab === 'ordenes') {
+                        const completada = i.estado === 'completado' || i.estado === 'terminado';
+                        return App.appState.filterStatus === 'approved' ? completada : !completada;
+                    } else if (App.appState.activeTab === 'supervisiones') {
+                        const conEvidencia = (i.evidenciasFotos && i.evidenciasFotos.length > 0) || i.evidenciaFoto;
+                        return App.appState.filterStatus === 'approved' ? conEvidencia : !conEvidencia;
+                    }
+                    return true;
+                });
+            }
+            
+            if (t) t.textContent = finalFiltered.length;
+            if (c) c.innerHTML = AdminView.renderReportsList(finalFiltered, App.appState.activeTab);
             
             try { this.updateStatsChart(filtered, App.appState.activeTab); } catch (e) {}
         } catch (error) {
@@ -192,19 +314,110 @@ const AdminController = {
         if (c) c.innerHTML = '<div class="spinner" style="margin:40px auto"></div><p style="text-align:center">Cargando órdenes...</p>';
         
         try {
-            let items = await StorageService.loadOrdenes();
+            const allItems = await StorageService.loadOrdenes();
             
+            // ---- LÓGICA ESTÁTICA DE MES Y HOY ----
+            const hoy = new Date();
+            const mesActual = hoy.getMonth() + 1;
+            const anioActual = hoy.getFullYear();
+            const diaActual = hoy.getDate();
+            
+            let itemsMes = [];
+            let itemsHoy = [];
+            
+            allItems.forEach(i => {
+                let y, m, d;
+                if (i.timestamp) {
+                    const date = new Date(i.timestamp);
+                    y = date.getFullYear(); m = date.getMonth() + 1; d = date.getDate();
+                } else if (i.fecha) {
+                    if (i.fecha.includes('/')) {
+                        const parts = i.fecha.split('/').map(Number);
+                        d = parts[0]; m = parts[1]; y = parts[2];
+                    } else if (i.fecha.includes('-')) {
+                        const parts = i.fecha.split('-').map(Number);
+                        y = parts[0]; m = parts[1]; d = parts[2];
+                    }
+                }
+                if (y === anioActual && m === mesActual) {
+                    itemsMes.push(i);
+                    if (d === diaActual) itemsHoy.push(i);
+                }
+            });
+            
+            // Inyectar resultados en la vista
+            const mt = document.getElementById('tMonthTotal'); const mp = document.getElementById('tMonthPend'); 
+            const mpr = document.getElementById('tMonthProc'); const mc = document.getElementById('tMonthComp');
+            
+            const tt = document.getElementById('tTodayTotal'); const tp = document.getElementById('tTodayPend'); 
+            const tpr = document.getElementById('tTodayProc'); const tc = document.getElementById('tTodayComp');
+
+            if (mt && tt) {
+                mt.textContent = itemsMes.length;
+                mp.textContent = itemsMes.filter(o => o.estado === 'pendiente').length;
+                mpr.textContent = itemsMes.filter(o => o.estado === 'en_proceso').length;
+                mc.textContent = itemsMes.filter(o => o.estado === 'completado' || o.estado === 'terminado').length;
+
+                tt.textContent = itemsHoy.length;
+                tp.textContent = itemsHoy.filter(o => o.estado === 'pendiente').length;
+                tpr.textContent = itemsHoy.filter(o => o.estado === 'en_proceso').length;
+                tc.textContent = itemsHoy.filter(o => o.estado === 'completado' || o.estado === 'terminado').length;
+            }
+            // ---- FIN LÓGICA ESTADÍSTICAS ----
+            
+            let filteredItems = allItems;
+            
+            // 1. Filtro por Fecha (Mes/Dia) para Taller
+            filteredItems = filteredItems.filter(i => {
+                let itemYear, itemMonth, itemDay;
+                if (i.timestamp) {
+                    const fecha = new Date(i.timestamp);
+                    itemYear = fecha.getFullYear(); itemMonth = fecha.getMonth() + 1; itemDay = fecha.getDate();
+                } else if (i.fecha) {
+                    if (i.fecha.includes('/')) {
+                        const [dia, mes, año] = i.fecha.split('/').map(Number);
+                        itemYear = año; itemMonth = mes; itemDay = dia;
+                    } else if (i.fecha.includes('-')) {
+                        const [año, mes, dia] = i.fecha.split('-').map(Number);
+                        itemYear = año; itemMonth = mes; itemDay = dia;
+                    }
+                }
+                
+                if (App.appState.filterTallerMonth) {
+                    if (!itemYear || !itemMonth) return false;
+                    const [year, month] = App.appState.filterTallerMonth.split('-').map(Number);
+                    if (itemYear !== year || itemMonth !== month) return false;
+                }
+                
+                if (App.appState.filterTallerDate) {
+                    if (!itemYear || !itemMonth || !itemDay) return false;
+                    const [year, month, day] = App.appState.filterTallerDate.split('-').map(Number);
+                    if (itemYear !== year || itemMonth !== month || itemDay !== day) return false;
+                }
+                return true;
+            });
+
+            // 2. Aplicar filtro de búsqueda de texto
             if (App.appState.filterSearch) {
                 const s = App.appState.filterSearch.toLowerCase();
-                items = items.filter(i => i.unidad?.toLowerCase().includes(s) || 
+                filteredItems = filteredItems.filter(i => i.unidad?.toLowerCase().includes(s) || 
                                          i.folio?.toString().toLowerCase().includes(s) || 
                                          i.operador?.toLowerCase().includes(s));
             }
             
-            items.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
-            this.updateTallerStats(items);
+            // 3. Aplicar filtro de estado (tarjetas)
+            if (App.appState.filterTallerStatus && App.appState.filterTallerStatus !== 'all') {
+                const status = App.appState.filterTallerStatus;
+                if (status === 'completado') {
+                    filteredItems = filteredItems.filter(o => o.estado === 'completado' || o.estado === 'terminado');
+                } else {
+                    filteredItems = filteredItems.filter(o => o.estado === status);
+                }
+            }
             
-            if (c) c.innerHTML = this.renderTallerOrdersList(items);
+            filteredItems.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+            
+            if (c) c.innerHTML = this.renderTallerOrdersList(filteredItems);
         } catch (error) {
             console.error("Error cargando taller:", error);
             if (c) c.innerHTML = '<div class="card"><p>Error al cargar las órdenes</p><button onclick="AdminController.loadTallerPanel()" class="btn btn-primary">Reintentar</button></div>';
@@ -328,17 +541,6 @@ const AdminController = {
             btn.innerText = originalText;
             btn.disabled = false;
         }
-    },
-
-    // Estadísticas del taller
-    updateTallerStats(ordenes) {
-        const pendientes = document.getElementById('pendientesCount');
-        const proceso = document.getElementById('procesoCount');
-        const completadas = document.getElementById('completadasCount');
-        
-        if (pendientes) pendientes.textContent = ordenes.filter(o => o.estado === 'pendiente').length;
-        if (proceso) proceso.textContent = ordenes.filter(o => o.estado === 'en_proceso').length;
-        if (completadas) completadas.textContent = ordenes.filter(o => o.estado === 'completado' || o.estado === 'terminado').length;
     },
 
     // Actualizar estado de orden
@@ -554,18 +756,34 @@ const AdminController = {
         if (!data.length) return alert('Sin datos');
         
         let filtered = data;
-        
-        // Aplicar filtro de tipo de ruta si estamos en inspecciones
-        if (App.appState.activeTab === 'checklists' && App.appState.filterTipoRuta && App.appState.filterTipoRuta !== 'Todos') {
-            filtered = filtered.filter(i => i.tipoRuta === App.appState.filterTipoRuta);
-        }
-        
         if (App.appState.filterSearch) {
             const s = App.appState.filterSearch.toLowerCase();
             filtered = filtered.filter(i => i.operador?.toLowerCase().includes(s) || 
                                            i.unidad?.toLowerCase().includes(s) || 
                                            i.folio?.toString().includes(s) || 
                                            i.nombreSupervisor?.toLowerCase().includes(s));
+        }
+        
+        // Aplicar filtro de tipo de unidad si es inspecciones
+        if (App.appState.activeTab === 'checklists' && App.appState.filterTipoRuta && App.appState.filterTipoRuta !== 'Todos') {
+            filtered = filtered.filter(i => (i.tipoRuta || 'Utilitario') === App.appState.filterTipoRuta);
+        }
+        
+        // Aplicar filtro de tarjetas clickeadas
+        if (App.appState.filterStatus && App.appState.filterStatus !== 'all') {
+            filtered = filtered.filter(i => {
+                if (App.appState.activeTab === 'checklists') {
+                    const hasFallas = Object.values(i.evaluaciones || {}).includes('rechazado');
+                    return App.appState.filterStatus === 'approved' ? !hasFallas : hasFallas;
+                } else if (App.appState.activeTab === 'ordenes') {
+                    const completada = i.estado === 'completado' || i.estado === 'terminado';
+                    return App.appState.filterStatus === 'approved' ? completada : !completada;
+                } else if (App.appState.activeTab === 'supervisiones') {
+                    const conEvidencia = (i.evidenciasFotos && i.evidenciasFotos.length > 0) || i.evidenciaFoto;
+                    return App.appState.filterStatus === 'approved' ? conEvidencia : !conEvidencia;
+                }
+                return true;
+            });
         }
         
         const csv = App.appState.activeTab === 'supervisiones' ? this.exportToCSVFormat(filtered, 'supervisiones') : 
@@ -588,122 +806,100 @@ const AdminController = {
         return '';
     },
 
-    // Mostrar opciones de exportación
-    showExportOptions() {
+    // Exportar todos los reportes filtrados a PDFs individuales (uno por uno)
+    async exportAllToPDF() {
         const isTaller = App.appState.step === 'taller-panel';
         const activeTab = isTaller ? 'ordenes' : App.appState.activeTab;
 
         if (activeTab === 'mapas') return alert('Esta función no aplica para el mapa.');
-        
-        const html = `
-            <div style="padding: 24px; text-align: center; font-family: 'Inter', sans-serif;">
-                <div style="width: 60px; height: 60px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-                    <i class='bx bxs-file-pdf' style="font-size: 32px; color: #1e40af;"></i>
-                </div>
-                <h3 style="margin-bottom: 8px; color: #1e293b; font-size: 20px;">Exportar Documentos</h3>
-                <p style="font-size: 13px; color: #64748b; margin-bottom: 24px;">
-                    ¿Qué registros deseas exportar como PDFs individuales?
-                </p>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button onclick="ModalService.close(); AdminController.exportAllToPDF('filtered')" 
-                            class="btn btn-primary" style="padding: 12px;">
-                        <i class='bx bx-filter-alt'></i> Solo los filtrados en pantalla
-                    </button>
-                    <button onclick="ModalService.close(); AdminController.exportAllToPDF('all')" 
-                            class="btn btn-secondary" style="padding: 12px; background: #f8fafc; color: #1e293b; border: 1px solid #e2e8f0;">
-                        <i class='bx bx-list-ul'></i> Todos los registros generales
-                    </button>
-                    <button onclick="ModalService.close()" 
-                            style="margin-top: 8px; background: transparent; border: none; color: #64748b; font-size: 13px; cursor: pointer; text-decoration: underline;">
-                        Cancelar
-                    </button>
-                </div>
-            </div>
-        `;
-        ModalService.show(html);
-    },
-
-    // Exportar todos los reportes filtrados a PDFs individuales (uno por uno)
-    async exportAllToPDF(exportMode = 'filtered') {
-        const isTaller = App.appState.step === 'taller-panel';
-        const activeTab = isTaller ? 'ordenes' : App.appState.activeTab;
 
         // 1. Obtener los datos según la pestaña
         let items = activeTab === 'checklists' ? await StorageService.loadReports() :
                     activeTab === 'ordenes' ? await StorageService.loadOrdenes() :
                     JSON.parse(localStorage.getItem('supervisiones') || '[]');
         
-        // 2. Aplicar filtros SOLO si el usuario eligió 'filtered'
+        // 2. Aplicar los mismos filtros que se ven en pantalla
         let filtered = items;
-        if (exportMode === 'filtered') {
-            if (isTaller) {
-                if (App.appState.filterSearch) {
-                    const s = App.appState.filterSearch.toLowerCase();
-                    filtered = items.filter(i => i.unidad?.toLowerCase().includes(s) || 
-                                             i.folio?.toString().toLowerCase().includes(s) || 
-                                             i.operador?.toLowerCase().includes(s));
-                }
-            } else {
-                filtered = items.filter(i => {
-                    let itemYear, itemMonth, itemDay;
-                    if (i.timestamp) {
-                        const fecha = new Date(i.timestamp);
-                        itemYear = fecha.getFullYear(); itemMonth = fecha.getMonth() + 1; itemDay = fecha.getDate();
-                    } else if (i.fecha) {
-                        if (i.fecha.includes('/')) {
-                            const [dia, mes, año] = i.fecha.split('/').map(Number);
-                            itemYear = año; itemMonth = mes; itemDay = dia;
-                        } else if (i.fecha.includes('-')) {
-                            const [año, mes, dia] = i.fecha.split('-').map(Number);
-                            itemYear = año; itemMonth = mes; itemDay = dia;
-                        }
-                    }
-
-                    if (App.appState.filterMonth) {
-                        if (!itemYear || !itemMonth) return false;
-                        const [year, month] = App.appState.filterMonth.split('-').map(Number);
-                        if (itemYear !== year || itemMonth !== month) return false;
-                    }
-
-                    if (App.appState.filterDate) {
-                        if (!itemYear || !itemMonth || !itemDay) return false;
-                        const [year, month, day] = App.appState.filterDate.split('-').map(Number);
-                        if (itemYear !== year || itemMonth !== month || itemDay !== day) return false;
-                    }
-                    return true;
-                }).filter(i => {
-                    // Filtro de tipo de ruta en la exportación
-                    if (activeTab === 'checklists' && App.appState.filterTipoRuta && App.appState.filterTipoRuta !== 'Todos') {
-                        if (i.tipoRuta !== App.appState.filterTipoRuta) return false;
-                    }
-                    
-                    if (!App.appState.filterSearch) return true;
-                    const s = App.appState.filterSearch.toLowerCase();
-                    if (activeTab === 'supervisiones') {
-                        return (i.nombreSupervisor?.toLowerCase().includes(s) || i.nombreCliente?.toLowerCase().includes(s) || i.numeroPedido?.toLowerCase().includes(s) || i.telefonoCliente?.toLowerCase().includes(s) || i.motivoQueja?.toLowerCase().includes(s) || i.ubicacion?.toLowerCase().includes(s));
-                    } else {
-                        return (i.operador?.toLowerCase().includes(s) || i.unidad?.toLowerCase().includes(s) || i.ecoUnidad?.toLowerCase().includes(s) || i.ruta?.toLowerCase().includes(s) || i.descripcion?.toLowerCase().includes(s) || i.descripcionFalla?.toLowerCase().includes(s) || i.folio?.toString().includes(s));
-                    }
-                });
+        if (isTaller) {
+            if (App.appState.filterSearch) {
+                const s = App.appState.filterSearch.toLowerCase();
+                filtered = items.filter(i => i.unidad?.toLowerCase().includes(s) || 
+                                         i.folio?.toString().toLowerCase().includes(s) || 
+                                         i.operador?.toLowerCase().includes(s));
             }
+        } else {
+            filtered = items.filter(i => {
+                let itemYear, itemMonth, itemDay;
+                if (i.timestamp) {
+                    const fecha = new Date(i.timestamp);
+                    itemYear = fecha.getFullYear(); itemMonth = fecha.getMonth() + 1; itemDay = fecha.getDate();
+                } else if (i.fecha) {
+                    if (i.fecha.includes('/')) {
+                        const [dia, mes, año] = i.fecha.split('/').map(Number);
+                        itemYear = año; itemMonth = mes; itemDay = dia;
+                    } else if (i.fecha.includes('-')) {
+                        const [año, mes, dia] = i.fecha.split('-').map(Number);
+                        itemYear = año; itemMonth = mes; itemDay = dia;
+                    }
+                }
+
+                if (App.appState.filterMonth) {
+                    if (!itemYear || !itemMonth) return false;
+                    const [year, month] = App.appState.filterMonth.split('-').map(Number);
+                    if (itemYear !== year || itemMonth !== month) return false;
+                }
+
+                if (App.appState.filterDate) {
+                    if (!itemYear || !itemMonth || !itemDay) return false;
+                    const [year, month, day] = App.appState.filterDate.split('-').map(Number);
+                    if (itemYear !== year || itemMonth !== month || itemDay !== day) return false;
+                }
+                return true;
+            }).filter(i => {
+                if (!App.appState.filterSearch) return true;
+                const s = App.appState.filterSearch.toLowerCase();
+                if (activeTab === 'supervisiones') {
+                    return (i.nombreSupervisor?.toLowerCase().includes(s) || i.nombreCliente?.toLowerCase().includes(s) || i.numeroPedido?.toLowerCase().includes(s) || i.telefonoCliente?.toLowerCase().includes(s) || i.motivoQueja?.toLowerCase().includes(s) || i.ubicacion?.toLowerCase().includes(s));
+                } else {
+                    return (i.operador?.toLowerCase().includes(s) || i.unidad?.toLowerCase().includes(s) || i.ecoUnidad?.toLowerCase().includes(s) || i.ruta?.toLowerCase().includes(s) || i.descripcion?.toLowerCase().includes(s) || i.descripcionFalla?.toLowerCase().includes(s) || i.folio?.toString().includes(s));
+                }
+            }).filter(i => {
+                if (activeTab === 'checklists' && App.appState.filterTipoRuta && App.appState.filterTipoRuta !== 'Todos') {
+                    return (i.tipoRuta || 'Utilitario') === App.appState.filterTipoRuta;
+                }
+                return true;
+            });
+        }
+        
+        // Aplicar filtro de tarjetas clickeadas
+        if (App.appState.filterStatus && App.appState.filterStatus !== 'all') {
+            filtered = filtered.filter(i => {
+                if (activeTab === 'checklists') {
+                    const hasFallas = Object.values(i.evaluaciones || {}).includes('rechazado');
+                    return App.appState.filterStatus === 'approved' ? !hasFallas : hasFallas;
+                } else if (activeTab === 'ordenes') {
+                    const completada = i.estado === 'completado' || i.estado === 'terminado';
+                    return App.appState.filterStatus === 'approved' ? completada : !completada;
+                } else if (activeTab === 'supervisiones') {
+                    const conEvidencia = (i.evidenciasFotos && i.evidenciasFotos.length > 0) || i.evidenciaFoto;
+                    return App.appState.filterStatus === 'approved' ? conEvidencia : !conEvidencia;
+                }
+                return true;
+            });
         }
 
-        if (!filtered.length) return alert('No hay registros para exportar.');
+        if (!filtered.length) return alert('No hay registros para exportar con los filtros actuales.');
+        if (!confirm(`Se van a descargar ${filtered.length} archivos PDF individuales.\n\nIMPORTANTE: Tu navegador podría pedirte permiso para "Descargar múltiples archivos". Por favor dale en "Permitir".\n\n¿Deseas continuar?`)) return;
 
-        // 3. Mostrar pantalla de carga estética (Sin fondos negros)
+        // 3. Mostrar pantalla de carga interactiva
         const loadingDiv = document.createElement('div');
-        loadingDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.9);backdrop-filter:blur(5px);color:#1e293b;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:99999;font-family:"Inter", sans-serif;';
+        loadingDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);color:white;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:99999;font-family:sans-serif;';
         loadingDiv.innerHTML = `
-            <div class="spinner" style="margin-bottom:24px; width:60px; height:60px; border:4px solid #e2e8f0; border-top:4px solid #1e40af; border-radius:50%; animation:spin 1s linear infinite;"></div>
+            <div class="spinner" style="margin-bottom:20px; width:50px; height:50px; border:5px solid #f3f3f3; border-top:5px solid #3b82f6; border-radius:50%; animation:spin 1s linear infinite;"></div>
             <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-            <h2 style="margin:0 0 12px 0; color:#0f172a; font-size:22px;">Generando PDFs individuales</h2>
-            <div style="background:#eff6ff; padding:8px 16px; border-radius:20px; border:1px solid #bfdbfe;">
-                <p id="pdfProgress" style="font-size:16px; font-weight:bold; color:#1d4ed8; margin:0;">Preparando 0 de ${filtered.length}</p>
-            </div>
-            <p style="font-size:13px; margin-top:24px; color:#64748b; text-align:center; max-width:80%; line-height:1.5;">
-                Por favor, no cierres esta ventana mientras se descargan.<br>
-                Asegúrate de <strong>permitir descargas múltiples</strong> si el navegador lo solicita.
-            </p>
+            <h2 style="margin:0 0 10px 0;">Generando PDFs individuales...</h2>
+            <p id="pdfProgress" style="font-size:18px; font-weight:bold; color:#32cd32;">Preparando 0 de ${filtered.length}</p>
+            <p style="font-size:14px; margin-top:20px; color:#cbd5e1; text-align:center; max-width:80%;">Por favor, no cierres esta ventana mientras se descargan.<br>Asegúrate de permitir las descargas múltiples si el navegador te lo pregunta.</p>
         `;
         document.body.appendChild(loadingDiv);
         const progressText = document.getElementById('pdfProgress');
@@ -764,17 +960,7 @@ const AdminController = {
                 // Damos un poco más de tiempo (1.2 seg) entre descargas para no trabar el navegador
                 await new Promise(resolve => setTimeout(resolve, 1200));
             }
-            
-            ModalService.show(`
-                <div style="padding: 30px; text-align: center; font-family: 'Inter', sans-serif;">
-                    <div style="width: 60px; height: 60px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-                        <i class='bx bx-check' style="font-size: 40px; color: #16a34a;"></i>
-                    </div>
-                    <h2 style="color: #166534; margin-bottom: 12px; font-size: 22px;">¡Descarga Completada!</h2>
-                    <p style="color: #475569; margin-bottom: 24px; font-size: 14px;">Se han descargado <strong>${filtered.length}</strong> documentos PDF en tu dispositivo.</p>
-                    <button onclick="ModalService.close()" class="btn btn-success" style="width: auto; padding: 10px 30px;">Aceptar</button>
-                </div>
-            `);
+            alert(`✅ Se han descargado ${filtered.length} PDFs correctamente.`);
         } catch (error) {
             console.error('Error generando PDFs:', error);
             alert('Ocurrió un error al generar los PDFs. Verifica la consola para más detalles.');
@@ -869,13 +1055,8 @@ const AdminController = {
         }
         
         const loadingDiv = document.createElement('div');
-        loadingDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.8);backdrop-filter:blur(4px);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:10000;';
-        loadingDiv.innerHTML = `
-            <div style="background:white;padding:30px;border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,0.1);text-align:center;border:1px solid #f1f5f9;">
-                <div class="spinner" style="margin:0 auto 15px auto; width:40px; height:40px; border:3px solid #e2e8f0; border-top:3px solid #1e40af;"></div>
-                <p style="color:#1e293b; font-weight:600; margin:0; font-family:'Inter', sans-serif;">Generando documento PDF...</p>
-            </div>
-        `;
+        loadingDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:10000;text-align:center;';
+        loadingDiv.innerHTML = '<div class="spinner" style="margin:10px auto;"></div><p>Generando PDF, por favor espera...</p>';
         document.body.appendChild(loadingDiv);
         
         const opt = {
@@ -911,10 +1092,7 @@ const AdminController = {
         
         const html = `
             <div style="padding: 20px; text-align: left; font-family: Arial, sans-serif;">
-                <h3 style="margin-bottom: 15px; color: #1e293b; font-size: 18px; display: flex; align-items: center; gap: 10px;">
-                    <img src="${CONFIG.LOGO_URL}" alt="Gen Logo" style="height: 28px; object-fit: contain;">
-                    Cambiar Contraseña
-                </h3>
+                <h3 style="margin-bottom: 10px; color: #1e293b; font-size: 18px;">🔐 Cambiar Contraseña</h3>
                 <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">
                     Ingresa el correo del empleado y su nueva contraseña.
                 </p>
@@ -950,16 +1128,8 @@ const AdminController = {
 
         try {
             await StorageService.resetUserPassword(email, password);
-            ModalService.show(`
-                <div style="padding: 30px; text-align: center; font-family: 'Inter', sans-serif;">
-                    <div style="width: 60px; height: 60px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-                        <i class='bx bx-check' style="font-size: 40px; color: #16a34a;"></i>
-                    </div>
-                    <h2 style="color: #166534; margin-bottom: 12px; font-size: 20px;">Contraseña Actualizada</h2>
-                    <p style="color: #475569; margin-bottom: 24px; font-size: 14px;">La contraseña de <strong>${email}</strong> fue cambiada exitosamente.</p>
-                    <button onclick="ModalService.close()" class="btn btn-success" style="width: auto; padding: 10px 30px;">Aceptar</button>
-                </div>
-            `);
+            alert(`✅ Contraseña actualizada correctamente para ${email}`);
+            ModalService.close();
         } catch (error) {
             alert(`❌ Error: ${error.message}`);
         } finally {

@@ -25,16 +25,26 @@ const AuthController = {
             if (error) throw error;
             
             // 2. Extraer el rol oculto en los metadatos
-            const role = data.user?.user_metadata?.role;
+            let role = data.user?.user_metadata?.role;
+            const userEmail = data.user?.email?.toLowerCase() || '';
             
-            if (role !== 'admin' && role !== 'supervisor') {
+            // Determinar rol por prefijo si no viene en metadata
+            if (userEmail.startsWith('admin')) role = 'admin';
+            else if (userEmail.startsWith('cilindros')) role = 'cilindros';
+            else if (userEmail.startsWith('autotanque')) role = 'autotanque';
+            else if (userEmail.startsWith('estaciones')) role = 'estaciones';
+            
+            const validRoles = ['admin', 'cilindros', 'autotanque', 'estaciones', 'supervisor'];
+            if (!validRoles.includes(role)) {
                 await client.auth.signOut(); // Cierra la sesión inmediatamente si no tiene rol válido
-                throw new Error(`Acceso denegado: Tu rol actual es '${role || 'NINGUNO'}'. Solo se permite 'admin' o 'supervisor'.`);
+                throw new Error(`Acceso denegado: Tu rol actual es '${role || 'NINGUNO'}'. No tienes permisos válidos.`);
             }
             
             // 3. Guardarlo en el estado de la app
             App.appState.userRole = role;
             App.appState.user = data.user;
+            
+            alert(`✅ Bienvenido. Nivel de acceso: ${role.toUpperCase()}`);
             
             // 4. Redirigir al menú principal (que ahora es exclusivo para logueados)
             App.goToStep('home');
@@ -56,8 +66,16 @@ const AuthController = {
             
             const { data: { session } } = await client.auth.getSession();
             if (session) {
-                const role = session.user?.user_metadata?.role;
-                if (role === 'admin' || role === 'supervisor') {
+                let role = session.user?.user_metadata?.role;
+                const userEmail = session.user?.email?.toLowerCase() || '';
+                
+                if (userEmail.startsWith('admin')) role = 'admin';
+                else if (userEmail.startsWith('cilindros')) role = 'cilindros';
+                else if (userEmail.startsWith('autotanque')) role = 'autotanque';
+                else if (userEmail.startsWith('estaciones')) role = 'estaciones';
+                
+                const validRoles = ['admin', 'cilindros', 'autotanque', 'estaciones', 'supervisor'];
+                if (validRoles.includes(role)) {
                     App.appState.userRole = role;
                     App.appState.user = session.user;
                 } else {
