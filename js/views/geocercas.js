@@ -4,6 +4,7 @@ const GeocercasView = {
     map: null,
     currentKmlLayer: null,
     allKmlData: null, // Guardaremos los datos en memoria para filtrar súper rápido
+    currentFilter: 'all',
 
     render() {
         return `
@@ -41,6 +42,15 @@ const GeocercasView = {
                     <div class="geo-sidebar">
                         <h3 style="color: #475569; margin-bottom: 24px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Filtros de Búsqueda</h3>
                         
+                        <!-- Buscador por Texto -->
+                        <div style="margin-bottom: 20px;">
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <i class='bx bx-search' style="position: absolute; left: 12px; color: #64748b; font-size: 18px;"></i>
+                                <input type="text" id="route-search-input" onkeyup="GeocercasView.applySearch()" placeholder="Buscar ruta exacta (ej. R 10)..." style="width: 100%; padding: 12px 35px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background: #f8fafc; outline: none; transition: border-color 0.2s;">
+                                <i class='bx bx-x' onclick="GeocercasView.clearSearch()" style="position: absolute; right: 12px; color: #94a3b8; font-size: 22px; cursor: pointer; transition: color 0.2s; padding: 2px;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'" title="Limpiar búsqueda"></i>
+                            </div>
+                        </div>
+
                         <!-- Botón Todas las rutas -->
                         <button id="btn-filter-all" onclick="GeocercasView.filterRoutes('all')" class="menu-item filter-btn"
                                 style="width: 100%; background: #1e40af; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(30, 64, 175, 0.2);">
@@ -221,7 +231,15 @@ const GeocercasView = {
     },
 
     // Función para filtrar rutas
-    filterRoutes(filterType) {
+    filterRoutes(filterType, fromSearch = false) {
+        this.currentFilter = filterType;
+        
+        // Limpiar buscador si el usuario hace clic manualmente en un botón
+        if (!fromSearch) {
+            const searchInput = document.getElementById('route-search-input');
+            if (searchInput) searchInput.value = '';
+        }
+
         // Actualizar UI de los botones (efecto de selección)
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.style.opacity = '0.5';
@@ -294,6 +312,28 @@ const GeocercasView = {
         this.loadAndFilterRoutes(filterType);
     },
 
+    // Función al escribir en el buscador
+    applySearch() {
+        const searchInput = document.getElementById('route-search-input');
+        if (searchInput && searchInput.value.trim() !== '') {
+            // Si el usuario escribe, forzamos la vista a "Todas las rutas" para que busque globalmente
+            if (this.currentFilter !== 'all') {
+                this.filterRoutes('all', true);
+                return; // filterRoutes ya llama a applyFilter internamente
+            }
+        }
+        this.applyFilter(this.currentFilter);
+    },
+
+    // Limpiar el buscador rápidamente
+    clearSearch() {
+        const searchInput = document.getElementById('route-search-input');
+        if (searchInput) {
+            searchInput.value = '';
+            this.applySearch(); // Vuelve a ejecutar la búsqueda vacía para restaurar la vista
+        }
+    },
+
     // Carga el KML solo una vez y luego aplica los filtros
     loadAndFilterRoutes(filterType) {
         // Si ya tenemos los datos descargados, solo aplicamos el filtro en memoria
@@ -342,9 +382,17 @@ const GeocercasView = {
         // Filtrar polígonos
         const filteredFeatures = this.allKmlData.features.filter(feature => {
             if (feature.geometry.type !== 'Polygon' && feature.geometry.type !== 'MultiPolygon') return false;
-            if (filterType === 'all') return true;
+            
+            const searchInput = document.getElementById('route-search-input');
+            const searchText = searchInput ? searchInput.value.toLowerCase().trim() : '';
             
             const name = (feature.properties.name || '').toLowerCase();
+            
+            // Si hay texto de búsqueda, la ruta DEBE coincidir con lo que el usuario escribe
+            if (searchText && !name.includes(searchText)) return false;
+            
+            if (filterType === 'all') return true;
+            
             const desc = (feature.properties.description || '').toLowerCase();
             // Leemos el nuevo campo SUPERVISOR de los datos del KML
             const supervisorData = (feature.properties.SUPERVISOR || '').toLowerCase();
