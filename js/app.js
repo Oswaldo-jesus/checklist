@@ -68,7 +68,7 @@ const App = {
         
         // Bloquear Paneles a cualquier rol que no sea admin
         if (step === 'admin-panel' || step === 'taller-panel') {
-            const adminRoles = ['admin', 'cilindros', 'autotanque', 'estaciones', 'supervisor'];
+            const adminRoles = ['admin', 'cilindros', 'autotanque', 'estaciones', 'supervisor', 'taller'];
             if (!adminRoles.includes(role)) {
                 return alert("❌ Acceso denegado: Área exclusiva de Administradores.");
             }
