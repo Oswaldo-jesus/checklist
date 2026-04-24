@@ -357,21 +357,17 @@ const SupervisionController = {
         
         setTimeout(async () => {
             try {
-                const supervisionesGuardadas = JSON.parse(localStorage.getItem('supervisiones') || '[]');
-                supervisionesGuardadas.push(reporte);
-                localStorage.setItem('supervisiones', JSON.stringify(supervisionesGuardadas));
+                const saved = await StorageService.saveSupervision(reporte);
+                if (!saved) throw new Error("Error al guardar en base de datos");
                 
                 // Disparar eventos para actualizar el mapa
                 window.dispatchEvent(new Event('supervisionGuardada'));
-                window.dispatchEvent(new StorageEvent('storage', {
-                    key: 'supervisiones',
-                    newValue: JSON.stringify(supervisionesGuardadas)
-                }));
                 
                 if (!appState.supervisiones) {
                     appState.supervisiones = [];
                 }
                 appState.supervisiones.push(reporte);
+                appState.ultimaSupervision = reporte;
                 
                 // Resetear formulario
                 appState.supervisionData = {

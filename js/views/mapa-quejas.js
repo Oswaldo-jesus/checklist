@@ -76,8 +76,8 @@ const MapaQuejasView = {
             this.markers = [];
         }
         
-        // Cargar supervisiones desde localStorage
-        const supervisiones = JSON.parse(localStorage.getItem('supervisiones') || '[]');
+        // Cargar supervisiones desde Supabase
+        const supervisiones = await StorageService.loadSupervisiones();
         console.log('Supervisiones cargadas:', supervisiones.length);
         
         let conCoordenadas = 0;

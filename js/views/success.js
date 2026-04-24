@@ -69,10 +69,7 @@ const SuccessView = {
     },
     
     // Vista de éxito para supervisión en campo
-    renderSupervisionSuccess() {
-        // Obtener el último reporte guardado
-        const supervisiones = JSON.parse(localStorage.getItem('supervisiones') || '[]');
-        const ultimo = supervisiones.length > 0 ? supervisiones[supervisiones.length - 1] : null;
+    renderSupervisionSuccess(ultimo = null) {
         
         return `
             <div class="container">

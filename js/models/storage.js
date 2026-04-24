@@ -246,6 +246,24 @@ async updateOrden(id, updates) {
         }
     },
     
+    // Cargar Supervisiones
+    async loadSupervisiones() {
+        const client = this.init();
+        if (!client) return [];
+
+        try {
+            const { data, error } = await client
+                .from('supervisiones')
+                .select('content')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            return data.map(row => row.content);
+        } catch (error) {
+            console.error("Error al cargar supervisiones:", error);
+            return [];
+        }
+    },
+    
     // Eliminar todos los reportes
     async clearReports() {
         const client = this.init();
@@ -259,6 +277,13 @@ async updateOrden(id, updates) {
         const client = this.init();
         if (!client) return;
         await client.from('ordenes').delete().neq('id', '0');
+    },
+
+    // Eliminar todas las supervisiones
+    async clearSupervisiones() {
+        const client = this.init();
+        if (!client) return;
+        await client.from('supervisiones').delete().neq('id', '0');
     },
     
     // Exportar a CSV
@@ -326,6 +351,55 @@ async updateOrden(id, updates) {
             throw new Error(error.message || "No se pudo actualizar. Verifica tus permisos.");
         }
         
+        return true;
+    },
+
+    // Guardar cambios en la geometría de una geocerca
+    async updateRouteGeometry(routeName, geometryGeoJson) {
+        const client = this.init();
+        if (!client) throw new Error("Supabase no conectado");
+
+        // Llama a una función RPC en Supabase para convertir el GeoJSON a PostGIS
+        const { error } = await client.rpc('actualizar_geocerca_geometria', {
+            p_nombre_ruta: routeName,
+            p_geometry_geojson: JSON.stringify(geometryGeoJson)
+        });
+
+        if (error) {
+            console.error("Error actualizando geometría:", error);
+            throw new Error(error.message || "No se pudo actualizar la forma de la ruta. Verifica tus permisos.");
+        }
+        
+        return true;
+    },
+
+    // Crear NUEVA geocerca en la BD
+    async createRouteGeometry(routeName, supervisorName, geometryGeoJson) {
+        const client = this.init();
+        if (!client) throw new Error("Supabase no conectado");
+
+        const { error } = await client.rpc('crear_geocerca', {
+            p_nombre_ruta: routeName,
+            p_supervisor: supervisorName,
+            p_geometry_geojson: JSON.stringify(geometryGeoJson)
+        });
+
+        if (error) {
+            console.error("Error creando geometría:", error);
+            throw new Error(error.message || "No se pudo guardar la nueva ruta. Verifica tus permisos.");
+        }
+        
+        return true;
+    },
+
+    // Eliminar geocerca de la BD
+    async deleteRoute(routeName) {
+        const client = this.init();
+        if (!client) throw new Error("Supabase no conectado");
+
+        const { error } = await client.from('geocercas').delete().eq('name', routeName);
+
+        if (error) throw new Error(error.message);
         return true;
     }
 };

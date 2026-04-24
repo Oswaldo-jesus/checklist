@@ -159,7 +159,7 @@ const AdminController = {
         try {
             let items = App.appState.activeTab === 'checklists' ? await StorageService.loadReports() :
                         App.appState.activeTab === 'ordenes' ? await StorageService.loadOrdenes() :
-                        JSON.parse(localStorage.getItem('supervisiones') || '[]');
+                        await StorageService.loadSupervisiones();
                         
             // ---- NUEVA LÓGICA: CÁLCULO ESTÁTICO DE MES Y HOY ----
             const hoy = new Date();
@@ -604,7 +604,7 @@ const AdminController = {
     
     // Ver supervisiones
     async viewSupervision(id) { 
-        const supervisiones = JSON.parse(localStorage.getItem('supervisiones')||'[]');
+        const supervisiones = await StorageService.loadSupervisiones();
         const s = supervisiones.find(s => s.id == id);
         if (s) {
             ModalService.show(this.renderSupervisionDetails(s)); 
@@ -751,7 +751,7 @@ const AdminController = {
         let data = App.appState.step === 'taller-panel' ? await StorageService.loadOrdenes() :
                    App.appState.activeTab === 'checklists' ? await StorageService.loadReports() :
                    App.appState.activeTab === 'ordenes' ? await StorageService.loadOrdenes() :
-                   JSON.parse(localStorage.getItem('supervisiones')||'[]');
+                   await StorageService.loadSupervisiones();
         
         if (!data.length) return alert('Sin datos');
         
@@ -816,7 +816,7 @@ const AdminController = {
         // 1. Obtener los datos según la pestaña
         let items = activeTab === 'checklists' ? await StorageService.loadReports() :
                     activeTab === 'ordenes' ? await StorageService.loadOrdenes() :
-                    JSON.parse(localStorage.getItem('supervisiones') || '[]');
+                    await StorageService.loadSupervisiones();
         
         // 2. Aplicar los mismos filtros que se ven en pantalla
         let filtered = items;
@@ -978,7 +978,7 @@ const AdminController = {
         
         if (App.appState.activeTab === 'checklists') await StorageService.clearReports();
         else if (App.appState.activeTab === 'ordenes') await StorageService.clearOrdenes();
-        else localStorage.removeItem('supervisiones');
+        else await StorageService.clearSupervisiones();
         
         this.loadReportsIntoPanel();
     },

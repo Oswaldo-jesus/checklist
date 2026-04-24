@@ -44,6 +44,10 @@ const HomeView = {
                             <i class='bx bx-map-alt' style="font-size: 22px;"></i> GEOCERCAS
                         </button>
 
+                        <button onclick="App.goToStep('geocercas-edicion')" class="btn" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white;">
+                            <i class='bx bx-edit-alt' style="font-size: 22px;"></i> EDICIÓN GEOCERCAS
+                        </button>
+
                         <button onclick="App.goToStep('supervision-form')" class="btn" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white;">
                             <i class='bx bx-user-pin' style="font-size: 22px;"></i> SUPERVISIÓN EN CAMPO
                         </button>       

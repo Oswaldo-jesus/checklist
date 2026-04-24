@@ -67,10 +67,19 @@ const App = {
         const role = this.appState.userRole;
         
         // Bloquear Paneles a cualquier rol que no sea admin
-        if (step === 'admin-panel' || step === 'taller-panel') {
+        if (step === 'admin-panel' || step === 'taller-panel' || step === 'geocercas-edicion') {
             const adminRoles = ['admin', 'cilindros', 'autotanque', 'estaciones', 'supervisor', 'taller'];
             if (!adminRoles.includes(role)) {
-                return alert("❌ Acceso denegado: Área exclusiva de Administradores.");
+                if (step === 'geocercas-edicion') {
+                    const pwd = prompt("🔐 Clave de acceso para edición de mapas:");
+                    if (['nieto2025', 'super7', 'admin'].includes(pwd)) {
+                        this.appState.userRole = 'supervisor';
+                    } else {
+                        return alert("❌ Clave incorrecta.");
+                    }
+                } else {
+                    return alert("❌ Acceso denegado: Área exclusiva de Administradores.");
+                }
             }
         }
 
@@ -125,6 +134,7 @@ const App = {
                 }, 100);
                 break;
             case 'geocercas':
+            case 'geocercas-edicion':
                 setTimeout(() => {
                     if (GeocercasView.initMap) GeocercasView.initMap();
                 }, 100);
@@ -172,6 +182,7 @@ const App = {
                 app.innerHTML = SuccessView.renderOrdenSuccess(this.appState.ordenData);
                 break;
             case 'geocercas':
+            case 'geocercas-edicion':
                 app.innerHTML = GeocercasView.render();
                 setTimeout(() => {
                     if (GeocercasView.initMap) GeocercasView.initMap();
@@ -181,7 +192,7 @@ const App = {
                 app.innerHTML = SupervisionView.renderForm(this.appState);
                 break;
             case 'supervision-success':
-                app.innerHTML = SuccessView.renderSupervisionSuccess();
+                app.innerHTML = SuccessView.renderSupervisionSuccess(this.appState.ultimaSupervision);
                 break;
             default:
                 app.innerHTML = HomeView.render();
@@ -214,8 +225,13 @@ const App = {
         if (typeof AuthController !== 'undefined') {
             await AuthController.checkActiveSession();
         }
+
+        // 3. Cargar los catálogos (Unidades, Rutas, Operadores) desde la BD
+        if (typeof CONFIG !== 'undefined' && CONFIG.loadCatalogsFromDB) {
+            await CONFIG.loadCatalogsFromDB();
+        }
         
-        // 3. Redirigir al apartado correcto
+        // 4. Redirigir al apartado correcto
         setTimeout(() => {
             if (this.appState.user) {
                 this.goToStep('home');

@@ -200,13 +200,53 @@ const GeocercasView = {
             attribution: '© OpenStreetMap'
         }).addTo(this.map);
 
-        // Cargar mapa por defecto
-        this.filterRoutes('all');
-        
-        // Forzar actualización del tamaño del mapa tras renderizar la UI en móviles
+        // --- HABILITAR EDICIÓN EN LA VISTA ESPECÍFICA ---
+        const isEditing = App.appState && App.appState.step === 'geocercas-edicion';
+
+        if (isEditing && this.map.pm) {
+            // Inicializar controles de Leaflet Geoman
+            this.map.pm.addControls({
+                position: 'topleft',
+                drawCircle: false,
+                drawMarker: false,
+                drawCircleMarker: false,
+                drawPolyline: false,
+                drawRectangle: false,
+                drawPolygon: true, // HABILITADO para crear nuevas rutas
+                drawText: false,
+                editMode: false,   // OCULTAMOS EL LÁPIZ GLOBAL (para evitar lag)
+                dragMode: true,
+                cutPolygon: false,
+                removalMode: true, // HABILITADO para borrar rutas
+                rotateMode: false
+            });
+            this.map.pm.setLang('es'); // Poner los botones en español
+            
+            // Capturar evento cuando se CREA una nueva ruta
+            this.map.on('pm:create', (e) => {
+                const layer = e.layer;
+                const geometry = layer.toGeoJSON().geometry;
+                GeocercasView.promptCreateGeometry(layer, geometry);
+            });
+
+            // Capturar evento cuando se ELIMINA una ruta
+            this.map.on('pm:remove', (e) => {
+                const feature = e.layer.feature;
+                if (!feature) return; // Si borró una figura que apenas estaba dibujando
+                const routeName = feature.properties.name;
+                GeocercasView.promptDeleteGeometry(routeName);
+            });
+        }
+
+        // CORRECCIÓN MAGISTRAL: 
+        // Retrasar la carga de datos hasta que el contenedor HTML del mapa tenga dimensiones reales calculadas.
+        // Esto repara el bug donde el mapa se mostraba en blanco hasta tocar un filtro.
         setTimeout(() => {
-            if (this.map) this.map.invalidateSize();
-        }, 300);
+            if (this.map) {
+                this.map.invalidateSize();
+                this.filterRoutes('all');
+            }
+        }, 400);
     },
 
     centrarMapa() {
@@ -565,19 +605,44 @@ const GeocercasView = {
                 const supervisorName = (feature.properties.SUPERVISOR || 'No asignado').replace(/[\r\n]+/g, '').trim();
                 const safeName = (name || '').replace(/[\r\n]+/g, '').replace(/'/g, "\\'").trim();
                 
-                // 4. Verificar si es administrador
-                const isAdmin = App.appState && App.appState.userRole === 'admin';
+                // 4. Determinar en qué modo estamos
+                const isEditing = App.appState && App.appState.step === 'geocercas-edicion';
                 
-                layer.bindPopup(`
-                    <div style="max-height: 250px; overflow-y: auto;">
-                        <b style="font-size:15px; color:#1e40af; border-bottom:1px solid #e2e8f0; padding-bottom:5px; display:block; margin-bottom: 5px;">${name}</b>
-                        <div style="font-size:11px; color:#dc2626; font-weight:bold; margin-bottom: 8px;">👤 Supervisor: ${supervisorName}</div>
-                        <div style="font-size:11px; font-weight:bold; color:#475569; margin-bottom: 3px;">📍 Colonias asignadas:</div>
-                        <div style="font-size:11px; margin-bottom: 12px; color:#475569; line-height: 1.4;">${colonias || 'Sin colonias especificadas'}</div>
-                        <button onclick="App.goToStep('supervision-form')" class="btn btn-primary" style="padding: 8px; font-size: 11px; width: 100%; margin:0; margin-bottom: ${isAdmin ? '5px' : '0'};">Supervisar esta ruta</button>
-                        ${isAdmin ? `<button onclick="GeocercasView.reassignRoute('${safeName}', '${supervisorName}')" class="btn" style="background: #f59e0b; color: white; padding: 8px; font-size: 11px; width: 100%; margin:0;">✏️ Reasignar Supervisor</button>` : ''}
-                    </div>
-                `);
+                if (isEditing) {
+                    // Usamos tooltip en lugar de popup para que los clics pasen directo al polígono y lo dejen arrastrar
+                    layer.bindTooltip(`<b style="font-size:14px; color:#991b1b;">${name}</b><br>Clic para editar esta ruta`, { sticky: true });
+
+                    // AL DAR CLIC: Apagar las demás y encender solo los vértices de esta
+                    layer.on('click', (e) => {
+                        if (GeocercasView.currentKmlLayer) {
+                            GeocercasView.currentKmlLayer.eachLayer(l => {
+                                if (l.pm && l !== layer) l.pm.disable();
+                            });
+                        }
+                        layer.pm.toggleEdit();
+                    });
+
+                    layer.on('pm:update', (e) => {
+                        const routeName = feature.properties.name;
+                        // e.layer.toGeoJSON().geometry obtiene el nuevo polígono generado
+                        const newGeometry = e.layer.toGeoJSON().geometry;
+                        
+                        GeocercasView.promptSaveGeometry(routeName, newGeometry);
+                    });
+                } else {
+                    const isAdmin = App.appState && ['admin', 'supervisor'].includes(App.appState.userRole);
+                    
+                    layer.bindPopup(`
+                        <div style="max-height: 250px; overflow-y: auto;">
+                            <b style="font-size:15px; color:#1e40af; border-bottom:1px solid #e2e8f0; padding-bottom:5px; display:block; margin-bottom: 5px;">${name}</b>
+                            <div style="font-size:11px; color:#dc2626; font-weight:bold; margin-bottom: 8px;">👤 Supervisor: ${supervisorName}</div>
+                            <div style="font-size:11px; font-weight:bold; color:#475569; margin-bottom: 3px;">📍 Colonias asignadas:</div>
+                            <div style="font-size:11px; margin-bottom: 12px; color:#475569; line-height: 1.4;">${colonias || 'Sin colonias especificadas'}</div>
+                            <button onclick="App.goToStep('supervision-form')" class="btn btn-primary" style="padding: 8px; font-size: 11px; width: 100%; margin:0; margin-bottom: ${isAdmin ? '5px' : '0'};">Supervisar esta ruta</button>
+                            ${isAdmin ? `<button onclick="GeocercasView.reassignRoute('${safeName}', '${supervisorName}')" class="btn" style="background: #f59e0b; color: white; padding: 8px; font-size: 11px; width: 100%; margin:0;">✏️ Reasignar Supervisor</button>` : ''}
+                        </div>
+                    `);
+                }
             }
         }).addTo(this.map);
 
@@ -617,6 +682,67 @@ const GeocercasView = {
             if (this.allKmlData.features.length === 0) {
                 countEl.innerHTML = `<span style="color:#dc2626; font-weight:bold;">⚠️ La tabla 'geocercas' está vacía en Supabase.</span>`;
             }
+        }
+    },
+
+    // Diálogo para guardar los cambios trazados
+    async promptSaveGeometry(routeName, geometry) {
+        if (!confirm(`⚠️ ¿Deseas guardar los cambios en el trazo de la ruta "${routeName}" en la base de datos?`)) {
+            // Si cancela, recargamos las rutas desde la base de datos para restaurar la forma original
+            this.allKmlData = null;
+            this.loadAndFilterRoutes(this.currentFilter);
+            return;
+        }
+
+        try {
+            await StorageService.updateRouteGeometry(routeName, geometry);
+            alert(`✅ Ruta ${routeName} actualizada correctamente.`);
+            // Recargar para sincronizar y asegurar que se guardó
+            this.allKmlData = null;
+            this.loadAndFilterRoutes(this.currentFilter);
+        } catch (error) {
+            alert(`❌ Error al guardar: ${error.message}\n\nNota: Verifica que la función 'actualizar_geocerca_geometria' exista en Supabase.`);
+        }
+    },
+
+    // Diálogo para crear una NUEVA ruta
+    async promptCreateGeometry(layer, geometry) {
+        const routeName = prompt("Ingresa el NOMBRE de la nueva ruta (Ej. R 100):");
+        if (!routeName) {
+            this.map.removeLayer(layer); // Canceló, quitamos el polígono
+            return;
+        }
+        
+        const supervisor = prompt("Ingresa el nombre del SUPERVISOR asignado (O deja en blanco para VACANTE):") || 'VACANTE';
+
+        try {
+            await StorageService.createRouteGeometry(routeName, supervisor, geometry);
+            alert(`✅ Ruta ${routeName} creada exitosamente.`);
+            this.allKmlData = null; // Forzar recarga
+            this.loadAndFilterRoutes(this.currentFilter);
+        } catch (err) {
+            alert(`❌ Error al crear: ${err.message}`);
+            this.map.removeLayer(layer);
+        }
+    },
+
+    // Diálogo para ELIMINAR una ruta
+    async promptDeleteGeometry(routeName) {
+        if (!confirm(`🚨 ¡ATENCIÓN!\n\n¿Estás completamente seguro de ELIMINAR la ruta "${routeName}"?\nEsta acción NO se puede deshacer.`)) {
+            this.allKmlData = null; // Forzar recarga para restaurar el polígono
+            this.loadAndFilterRoutes(this.currentFilter);
+            return;
+        }
+
+        try {
+            await StorageService.deleteRoute(routeName);
+            alert(`🗑️ Ruta ${routeName} eliminada de la base de datos.`);
+            this.allKmlData = null;
+            this.loadAndFilterRoutes(this.currentFilter);
+        } catch (err) {
+            alert(`❌ Error al eliminar: ${err.message}`);
+            this.allKmlData = null;
+            this.loadAndFilterRoutes(this.currentFilter);
         }
     }
 };
