@@ -233,7 +233,7 @@ const GeocercasView = {
             this.map.on('pm:remove', (e) => {
                 const feature = e.layer.feature;
                 if (!feature) return; // Si borró una figura que apenas estaba dibujando
-                const routeName = feature.properties.name;
+                const routeName = (feature.properties.name || '').trim(); // 👈 Limpiamos el texto
                 GeocercasView.promptDeleteGeometry(routeName);
             });
         }
@@ -623,7 +623,7 @@ const GeocercasView = {
                     });
 
                     layer.on('pm:update', (e) => {
-                        const routeName = feature.properties.name;
+                        const routeName = (feature.properties.name || '').trim(); // 👈 Quitamos espacios extra invisibles
                         // e.layer.toGeoJSON().geometry obtiene el nuevo polígono generado
                         const newGeometry = e.layer.toGeoJSON().geometry;
                         
@@ -701,7 +701,7 @@ const GeocercasView = {
             this.allKmlData = null;
             this.loadAndFilterRoutes(this.currentFilter);
         } catch (error) {
-            alert(`❌ Error al guardar: ${error.message}\n\nNota: Verifica que la función 'actualizar_geocerca_geometria' exista en Supabase.`);
+            alert(`❌ Error al guardar: ${error.message}`);
         }
     },
 

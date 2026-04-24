@@ -1,68 +1,6 @@
 // admin.js - Vistas del panel de administración
 
 const AdminView = {
-    // Vista de login para SUPERVISOR
-    renderLogin() {
-        return `
-            <div class="container">
-                <div style="text-align: center; padding: 40px 20px;">
-                    <h2 style="color: #1e293b; margin-bottom: 30px;">👨‍💼 Acceso Supervisor</h2>
-                    
-                    <div class="card" style="max-width: 300px; margin: 0 auto;">
-                        <div class="form-group">
-                            <label>Clave de acceso</label>
-                            <input type="password" 
-                                    id="adminPassword"
-                                    placeholder="Ingresa la clave"
-                                    style="text-align: center; font-weight: bold;">
-                        </div>
-                        
-                        <button onclick="AdminController.checkPassword()" class="btn btn-primary">
-                            Ingresar
-                        </button>
-                        
-                        <button onclick="App.goToStep('home')" 
-                                class="btn btn-secondary"
-                                style="margin-top: 10px;">
-                            Volver
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-    
-    // Vista de login para TALLER
-    renderTallerLogin() {
-        return `
-            <div class="container">
-                <div style="text-align: center; padding: 40px 20px;">
-                    <h2 style="color: #1e293b; margin-bottom: 30px;">🔧 Acceso Taller Mecánico</h2>
-                    
-                    <div class="card" style="max-width: 300px; margin: 0 auto;">
-                        <div class="form-group">
-                            <label>Clave de acceso</label>
-                            <input type="password" 
-                                    id="tallerPassword"
-                                    placeholder="Ingresa la clave"
-                                    style="text-align: center; font-weight: bold;">
-                        </div>
-                        
-                        <button onclick="AdminController.checkTallerPassword()" class="btn btn-primary" style="background: #0f172a;">
-                            Ingresar al Taller
-                        </button>
-                        
-                        <button onclick="App.goToStep('home')" 
-                                class="btn btn-secondary"
-                                style="margin-top: 10px;">
-                            Volver
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-    
     // Vista del panel SUPERVISOR
     renderPanel(appState) {
         const d = new Date();

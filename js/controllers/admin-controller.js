@@ -4,26 +4,6 @@ const AdminController = {
     chartInstance: null,
     SECRET_CLEAN_CODE: "Nieto2025",
 
-    // Verificar contraseñas
-    checkPassword() {
-        const pwd = document.getElementById('adminPassword')?.value;
-        if (['nieto2025','super7','admin'].includes(pwd)) {
-            App.appState.userRole = 'supervisor';
-            App.goToStep('admin-panel');
-        } else if (['nieto2025','mecanico'].includes(pwd)) {
-            App.appState.userRole = 'taller';
-            App.goToStep('taller-panel');
-        } else alert("Clave incorrecta.");
-    },
-    
-    checkTallerPassword() {
-        const pwd = document.getElementById('tallerPassword')?.value;
-        if (['nieto2025','mecanico','taller2025'].includes(pwd)) {
-            App.appState.userRole = 'taller';
-            App.goToStep('taller-panel');
-        } else alert("❌ Clave incorrecta.");
-    },
-
     // Cambiar pestaña
     switchTab(tab) {
         App.appState.activeTab = tab;

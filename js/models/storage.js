@@ -359,7 +359,7 @@ async updateOrden(id, updates) {
         const client = this.init();
         if (!client) throw new Error("Supabase no conectado");
 
-        // Llama a una función RPC en Supabase para convertir el GeoJSON a PostGIS
+        // Llamamos a la función corregida en Supabase que tiene permisos de administrador (SECURITY DEFINER)
         const { error } = await client.rpc('actualizar_geocerca_geometria', {
             p_nombre_ruta: routeName,
             p_geometry_geojson: JSON.stringify(geometryGeoJson)
@@ -367,7 +367,7 @@ async updateOrden(id, updates) {
 
         if (error) {
             console.error("Error actualizando geometría:", error);
-            throw new Error(error.message || "No se pudo actualizar la forma de la ruta. Verifica tus permisos.");
+            throw new Error(error.message || "No se pudo actualizar la forma de la ruta.");
         }
         
         return true;
@@ -397,9 +397,16 @@ async updateOrden(id, updates) {
         const client = this.init();
         if (!client) throw new Error("Supabase no conectado");
 
-        const { error } = await client.from('geocercas').delete().eq('name', routeName);
+        // Usamos una función RPC para evitar bloqueos de seguridad (RLS) al borrar
+        const { data, error } = await client.rpc('eliminar_geocerca', {
+            p_nombre_ruta: routeName
+        });
 
-        if (error) throw new Error(error.message);
+        if (error) throw new Error(error.message || "No se pudo eliminar la ruta.");
+        
+        // Detectar si el borrado fue un "Fallo silencioso" (0 filas afectadas)
+        if (data === false) throw new Error(`Fallo Silencioso: No se encontró la ruta "${routeName}" en la base de datos.`);
+        
         return true;
     }
 };
